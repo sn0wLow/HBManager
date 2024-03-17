@@ -1,0 +1,375 @@
+﻿.calendar-container {
+    flex-direction: column;
+    margin-left: -1rem !important;
+    margin-right: -1rem !important;
+}
+
+.calendar-year-nav {
+    width: 45rem;
+    background-color: #0F0F0F;
+    background-color: var(--mud-palette-surface);
+    /*box-shadow: 0px -3px 6px -2px rgb(0 0 0 / 35%);*/
+    z-index: 2;
+}
+
+::deep .carousel-calendar {
+    height: 45rem !important;
+    /*    margin-right: -1.5rem !important;
+    margin-left: -2rem !important;*/
+}
+
+::deep .year-nav-button {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0px;
+    background-color: transparent;
+    color: var(--mud-palette-text-secondary);
+}
+
+    ::deep .year-nav-button :hover {
+        color: var(--mud-palette-text-primary);
+    }
+
+.month-picker-container {
+    color: var(--mud-palette-text-secondary);
+    font-family: monospace;
+    background-color: #0A0A0A;
+    background-color: var(--mud-palette-background-grey);
+    width: 45rem;
+    height: 45rem;
+    border-radius: 0 0 1.5rem 1.5rem;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-auto-rows: 1fr;
+    grid-gap: 1.25rem;
+    padding: 1.25rem;
+}
+
+@media (min-width: 741px) {
+    .calendar-container {
+        margin-right: -1rem !important;
+        margin-left: -1rem !important;
+    }
+}
+
+
+@media (max-width: 740px) {
+    .calendar-year-nav {
+        width: 92.5% !important;
+    }
+
+    .month-picker-container {
+        width: 92.5%;
+        height: 60rem;
+        grid-template-columns: 1fr 1fr;
+        grid-gap: 0.75rem !important;
+        padding: 0.75rem !important;
+    }
+
+    ::deep .carousel-calendar {
+        height: 60rem !important;
+    }
+
+    .month-header {
+        font-size: 1.35rem !important;
+    }
+
+    .month-content {
+        margin: 0.25rem 0.75rem !important;
+    }
+
+    .month-shoppinglist-entry {
+        font-size: 0.85rem !important;
+    }
+
+    @media (max-width: 650px) {
+        .month-shoppinglist-entry {
+            font-size: 0.8rem !important;
+        }
+    }
+}
+
+
+
+.month-container {
+    background-color: #0F0F0F;
+    background-color: var(--mud-palette-surface);
+    border-radius: 1.0rem;
+    overflow: hidden;
+    box-shadow: 0px 2px 2px 0px rgb(0 0 0), inset 0px -3px 6px -2px rgb(0 0 0 / 35%);
+    transition: transform 300ms;
+    cursor: pointer;
+    transition-timing-function: ease-in-out;
+    will-change: transform;
+    display: flex;
+    flex-direction: column !important;
+    padding: 0px !important;
+    margin: 0px !important;
+}
+
+
+
+    .month-container:hover:not([disabled]) {
+        transform: scale(1.05);
+        color: var(--mud-palette-text-primary);
+    }
+
+    .month-container:focus:not([disabled]) {
+        transform: scale(1.05);
+        color: var(--mud-palette-text-primary);
+    }
+
+.month-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #3f3f3f;
+    background-color: var(--mud-palette-table-lines);
+    height: 2rem;
+    font-weight: bold;
+    font-size: 1.75rem;
+    letter-spacing: 0.25rem;
+    box-shadow: 0px 2px 2px 0px rgb(0 0 0);
+    margin: 0px !important;
+}
+
+
+    .month-header.current-date {
+        background-color: var(--mud-palette-primary) !important;
+    }
+
+.month-content {
+    margin: 0.25rem 1rem !important;
+    padding: 0px !important;
+    backface-visibility: hidden;
+    color: var(--mud-palette-text-secondary);
+}
+
+    .month-content:hover {
+        color: var(--mud-palette-text-primary);
+    }
+
+.month-container:hover:not([disabled]) > .month-content > .month-shoppinglist-entry {
+    color: var(--mud-palette-text-primary) !important;
+}
+
+
+.month-content-new {
+    height: calc(100% - 3rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 6rem;
+}
+
+.month-shoppinglist-entry {
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 1rem;
+    letter-spacing: 2px !important;
+    line-height: 1.85rem !important;
+    -webkit-animation: fadein 250ms; /* Safari, Chrome and Opera > 12.1 */
+    -moz-animation: fadein 250ms; /* Firefox < 16 */
+    -o-animation: fadein 250ms; /* Opera < 12.1 */
+    animation: fadein 250ms;
+}
+
+.mud-carousel-transition-slide-next-enter {
+    animation: 0.5s mud-carousel-transition-slide-next-enter-keyframe
+}
+
+.mud-carousel-transition-slide-next-rtl-enter {
+    animation: 0.5s mud-carousel-transition-slide-next-rtl-enter-keyframe;
+}
+
+.mud-carousel-transition-slide-next-exit {
+    animation: 0.5s mud-carousel-transition-slide-next-exit-keyframe;
+    animation-fill-mode: forwards;
+}
+
+.mud-carousel-transition-slide-next-rtl-exit {
+    animation: 0.5s mud-carousel-transition-slide-next-rtl-exit-keyframe;
+    animation-fill-mode: forwards;
+}
+
+.mud-carousel-transition-slide-prev-enter {
+    animation: 0.5s mud-carousel-transition-slide-prev-enter-keyframe
+}
+
+.mud-carousel-transition-slide-prev-rtl-enter {
+    animation: 0.5s mud-carousel-transition-slide-prev-rtl-enter-keyframe;
+}
+
+.mud-carousel-transition-slide-prev-exit {
+    animation: 0.5s mud-carousel-transition-slide-prev-exit-keyframe;
+    animation-fill-mode: forwards;
+}
+
+.mud-carousel-transition-slide-prev-rtl-exit {
+    animation: 0.5s mud-carousel-transition-slide-prev-rtl-exit-keyframe;
+    animation-fill-mode: forwards;
+}
+
+
+
+::deep .mud-carousel-transition-fade-in3 {
+    animation: 1000ms mud-carousel-transition-fade-in-keyframe
+}
+
+
+
+
+@keyframes fadein {
+    from {
+        opacity: 0.25;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Firefox < 16 */
+@-moz-keyframes fadein {
+    from {
+        opacity: 0.25;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Safari, Chrome and Opera > 12.1 */
+@-webkit-keyframes fadein {
+    from {
+        opacity: 0.25;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Opera < 12.1 */
+@-o-keyframes fadein {
+    from {
+        opacity: 0.25;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+
+@keyframes mud-carousel-transition-fade-in-keyframe {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes mud-carousel-transition-fade-out-keyframe {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes mud-carousel-transition-slide-prev-enter-keyframe {
+    from {
+        transform: translate3d(-100%, 0, 0);
+        visibility: visible;
+    }
+
+    to {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes mud-carousel-transition-slide-prev-rtl-enter-keyframe {
+    from {
+        transform: translate3d(100%, 0, 0);
+        visibility: visible;
+    }
+
+    to {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes mud-carousel-transition-slide-prev-exit-keyframe {
+    from {
+        transform: translate3d(0, 0, 0);
+        visibility: visible;
+    }
+
+    to {
+        transform: translate3d(100%, 0, 0);
+    }
+}
+
+@keyframes mud-carousel-transition-slide-prev-rtl-exit-keyframe {
+    from {
+        transform: translate3d(0, 0, 0);
+        visibility: visible;
+    }
+
+    to {
+        transform: translate3d(-100%, 0, 0);
+    }
+}
+
+@keyframes mud-carousel-transition-slide-next-enter-keyframe {
+    from {
+        transform: translate3d(100%, 0, 0);
+        visibility: visible;
+    }
+
+    to {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes mud-carousel-transition-slide-next-rtl-enter-keyframe {
+    from {
+        transform: translate3d(-100%, 0, 0);
+        visibility: visible;
+    }
+
+    to {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes mud-carousel-transition-slide-next-exit-keyframe {
+    from {
+        transform: translate3d(0, 0, 0);
+        visibility: visible;
+    }
+
+    to {
+        transform: translate3d(-100%, 0, 0);
+    }
+}
+
+@keyframes mud-carousel-transition-slide-next-rtl-exit-keyframe {
+    from {
+        transform: translate3d(0, 0, 0);
+        visibility: visible;
+    }
+
+    to {
+        transform: translate3d(100%, 0, 0);
+    }
+}

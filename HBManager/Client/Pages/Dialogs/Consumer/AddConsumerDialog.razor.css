@@ -1,0 +1,58 @@
+﻿::deep .mud-picker-content{
+    align-items: center;
+}
+::deep .mud-picker-color-dot {
+    height: 64px !important;
+    width: 64px !important;
+    max-width: 64px !important;
+}
+::deep .mud-picker-color-controls{
+    padding: 0rem;
+}
+
+::deep .mud-picker-color-controls-row{
+    width: 0px !important;
+    display: none !important;
+}
+
+::deep .mud-picker-color-view {
+    width: auto;
+    height: auto;
+}
+::deep .mud-picker-color-view-collection {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+::deep .mud-picker-color-controls {
+    height: 0px !important;
+}
+
+
+::deep .mud-picker-static {
+    margin-top: 1rem;
+}
+
+@media (max-width: 500px) {
+    ::deep .mud-picker-color-dot {
+        height: 32px !important;
+        min-height: 32px !important;
+        width: 32px !important;
+        max-width: 32px !important;
+        min-width: 32px !important;
+    }
+
+
+    ::deep .mud-picker-static {
+        min-width: 100%;
+        width: 100%;
+    }
+    ::deep .mud-paper-square {
+        width: 100%;
+    }
+
+    ::deep .mud-picker-content {
+        min-width: 100%;
+        width: 100%;
+    }
+}

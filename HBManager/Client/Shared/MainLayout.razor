@@ -1,0 +1,154 @@
+﻿@inherits LayoutComponentBase
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+<MudThemeProvider @ref="@mudThemeProvider" Theme="theme" @bind-IsDarkMode="@isDarkMode" />
+<MudDialogProvider FullWidth="true"
+                   MaxWidth="MaxWidth.ExtraSmall"
+                   CloseButton="true"
+                   DisableBackdropClick="true"
+                   NoHeader="false"
+                   Position="DialogPosition.Center"
+                   CloseOnEscapeKey="true" />
+<MudSnackbarProvider />
+
+
+<div>
+    <MudLayout>
+        <AuthorizeView>
+            <MudAppBar Elevation="1" Dense="false" Fixed="true">
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+                <MudText Typo="Typo.h6" Class="mud-appbar-text">HBManager</MudText>
+                <MudSpacer />
+                <MudFab StartIcon="@Icons.Material.Filled.Search" Size="Size.Medium" DisableElevation="true" aria-label="profile" Href="product-search" Class="mud-menu-darkmode-btn me-3"></MudFab>
+                <MudToggleIconButton Icon="@Icons.Material.Filled.DarkMode" Color="Color.Primary"
+                                     ToggledIcon="@Icons.Material.Filled.WbSunny" ToggledColor="Color.Warning"
+                                     aria-label="toggle-darkmode" Class="mud-menu-darkmode-btn me-3"
+                                     @onclick="(e) => ToggleDarkMode()" Toggled="@isDarkMode" />
+                <MudMenu Icon="@Icons.Material.Filled.Person" AnchorOrigin="Origin.BottomCenter" Class="mud-menu-profile-btn me-5" aria-label="profile-icon-button">
+                    <MudMenuItem Icon="@Icons.Material.Filled.Person" aria-label="profile" Href="profile">Profile</MudMenuItem>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Logout" aria-label="logout" Href="sign-out">Abmelden</MudMenuItem>
+                </MudMenu>
+            </MudAppBar>
+        </AuthorizeView>
+        <MudDrawer @bind-Open="@_drawerOpen" ClipMode="DrawerClipMode.Never" Variant="@DrawerVariant.Temporary" Width="250px" Elevation="2" Class="mud-drawer">
+            <NavMenu @ref="@navMenu" />
+        </MudDrawer>
+        <MudMainContent Class="mud-main-content">
+            @Body
+        </MudMainContent>
+    </MudLayout>
+</div>
+
+
+@*<MudLayout>
+    <div class="page">
+        <div class="sidebar">
+            <AuthorizeView>
+                <NavMenu @ref="@navMenu" />
+            </AuthorizeView>
+        </div>
+        <main>
+            <article class="content px-4">
+                @Body
+            </article>
+        </main>
+
+    </div>
+</MudLayout>*@
+
+
+
+
+
+
+@*
+<MudThemeManagerButton OnClick="@((e) => OpenThemeManager(true))" />
+<MudThemeManager Open="_themeManagerOpen" OpenChanged="OpenThemeManager" Theme="_themeManager" ThemeChanged="UpdateTheme" />
+*@
+
+
+@code {
+    private MudThemeProvider? mudThemeProvider;
+    private NavMenu? navMenu;
+    private bool isDarkMode;
+
+    bool _drawerOpen = false;
+
+    private void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private async Task ToggleDarkMode()
+    {
+        isDarkMode = !isDarkMode;
+        await localStorage.SetItemAsync("UseDarkMode", isDarkMode);
+    }
+
+    private MudTheme theme = new MudTheme()
+        {
+            Palette = new PaletteLight()
+            {
+                Primary = Colors.Blue.Default,
+                TextPrimary = "#2E2D2DFF",
+                TextSecondary = "#424242FF",
+                PrimaryContrastText = "#0F0F0F30",
+                BackgroundGrey = "#DFDFDFFF",
+                TableLines = "#C8C8C8ff",
+                Divider = "#E0E0E0FF",
+                AppbarBackground = "#DFDFDFFF"
+            },
+            PaletteDark = new PaletteDark()
+            {
+                Primary = Colors.Blue.Default,
+                TextPrimary = "#EDEBEBFF",
+                TextSecondary = "#D3D3D3FF",
+                PrimaryContrastText = "#EDEBEB30",
+                TableLines = "#ffffff1e",
+                Divider = "#FFFFFF1E",
+                AppbarBackground = "#27272FFF"
+            }
+        };
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            bool? useDarkMode;
+            try
+            {
+                useDarkMode = await localStorage.GetItemAsync<bool?>("UseDarkMode");
+            }
+            catch (Exception)
+            {
+
+                useDarkMode = null;
+            }
+
+
+            if (useDarkMode is null)
+            {
+                isDarkMode = await mudThemeProvider!.GetSystemPreference();
+                await localStorage.SetItemAsync("UseDarkMode", isDarkMode);
+            }
+            else
+            {
+                isDarkMode = (bool)useDarkMode;
+            }
+
+            if (navMenu is not null)
+            {
+                navMenu!.ToggledDrawer += () =>
+                {
+                    _drawerOpen = !_drawerOpen;
+                    StateHasChanged();
+                };
+            }
+
+
+
+            StateHasChanged();
+        }
+    }
+
+}

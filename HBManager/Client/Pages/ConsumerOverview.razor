@@ -1,0 +1,220 @@
+﻿@page "/consumers"
+@inject IConsumerService ConsumerService
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+@attribute [Authorize]
+
+<PageTitle>Verbaucherübersicht</PageTitle>
+
+@if (isLoadingData)
+{
+    <div>
+        <MudContainer Class="mt-0 mb-5 px-0" MaxWidth="MaxWidth.Large">
+            <MudGrid>
+                <MudItem xs="12" sm="12" md="8">
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="12">
+                            <MudPaper Elevation="2" Class="pa-4">
+                                <MudSkeleton Width="30%" Height="45px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" />
+                                <MudDivider Class="mb-2" />
+                                <MudSkeleton Width="10%" Height="30px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" />
+                                <MudSkeleton Width="15%" Height="30px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" />
+                            </MudPaper>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="12" md="12">
+                            <MudPaper Elevation="2" Class="pa-4">
+                                <MudSkeleton Width="30%" Height="40px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons mb-3" />
+                                <MudSkeleton Width="35%" Height="36px" Animation="Animation.Wave" SkeletonType="SkeletonType.Rectangle" Class="skeletons me-4" />
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+
+                <MudItem xs="12" sm="12" md="4">
+                    <MudPaper Elevation="2" Class="pa-4 d-flex flex-column" Style="aspect-ratio: 1;">
+                        <div class="align-self-center" style="width: 80%; height: 80%">
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="height: 100%; width: 100%" />
+                        </div>
+                        <div class="d-flex justify-content-center flex-row mt-3">
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="width: 20px; height: 20px; margin-right: 5px" />
+                            <MudSkeleton Width="25%" Height="20px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" Style="margin-right: 15px" />
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="width: 20px; height: 20px; margin-right: 5px" />
+                            <MudSkeleton Width="20%" Height="20px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" Style="margin-right: 15px" />
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="width: 20px; height: 20px; margin-right: 5px" />
+                            <MudSkeleton Width="16%" Height="20px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" Style="margin-right: 15px" />
+                        </div>
+                        <div class="d-flex justify-content-center flex-row mt-3">
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="width: 20px; height: 20px; margin-right: 5px" />
+                            <MudSkeleton Width="21%" Height="20px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" Style="margin-right: 15px" />
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="width: 20px; height: 20px; margin-right: 5px" />
+                            <MudSkeleton Width="24%" Height="20px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" Style="margin-right: 15px" />
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="width: 20px; height: 20px; margin-right: 5px" />
+                            <MudSkeleton Width="12%" Height="20px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" Style="margin-right: 15px" />
+                        </div>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </div>
+}
+else
+{
+    <div>
+        <MudContainer Class="mt-0 mb-5 px-0" MaxWidth="MaxWidth.Large">
+            <MudGrid>
+                <MudItem xs="12" sm="12" md="8">
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="12">
+                            <MudPaper Elevation="2" Class="pa-4">
+                                <MudText Typo="Typo.h4">Verbraucherübersicht</MudText>
+                                <MudDivider Class="mb-2" />
+                                <MudText Typo="Typo.h6">Anzahl der Produkte: @(hasAnyConsumers ? @consumers.First().GlobalTotalUniqueProductAmount : 0)</MudText>
+                                <MudText Typo="Typo.h6">Gesamtausgaben: @totalCosts.ToString("0.00")€</MudText>
+                            </MudPaper>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="12" md="12">
+                            <MudPaper Elevation="2" Class="pa-4">
+                                <MudText Typo="Typo.h6" Class="mb-3">Optionen für Verbraucher</MudText>
+
+                                @if (consumers.Count() >= 12)
+                                {
+                                    <MudTooltip Text="12 Verbraucher maximal" Arrow="true"
+                                        ShowOnClick="true"
+                                        ShowOnFocus="true"
+                                        ShowOnHover="true"
+                                        Placement="Placement.Bottom">
+                                        <div class="d-flex gap-3">
+                                            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.SupervisorAccount" Color="Color.Tertiary" Disabled="true">Verbraucher hinzufügen</MudButton>
+                                        </div>
+                                    </MudTooltip>
+
+                                }
+                                else
+                                {
+                                    <div class="d-flex gap-3">
+                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.SupervisorAccount" Color="Color.Tertiary" OnClick="OpenConsumerAddDialog">Verbraucher hinzufügen</MudButton>
+                                    </div>
+                                }
+
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+
+                <MudItem xs="12" sm="12" md="4">
+                    <MudPaper Elevation="2" Class="pa-4">
+                        <MudChart ChartType="ChartType.Pie" InputData="@chartData" @bind-SelectedIndex="Index" InputLabels="@chartLabels" ChartOptions="@chartOptions" />
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" sm="12" md="12">
+                    <MudPaper Elevation="2" Class="px-4 py-4">
+                        <MudGrid Justify="Justify.Center" Spacing="4" Class="py-4">
+                            @if (hasAnyConsumers)
+                            {
+                                @foreach (var consumer in consumers)
+                                {
+                                    var id = consumer.ID;
+                                    <MudItem>
+                                        <MudPaper Elevation="4" Class="consumer-card-conainer" @onclick="@(() => BtnConsumer_Click(id))">
+                                            <div class="consumer-card-header">
+                                                <div class="consumer-card-header-content mx-auto my-auto">
+                                                    <div>
+                                                        <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" Style="@($"color: {ConsumerColor.Palette.ElementAt(consumer.ColorIndex)}")" />
+                                                    </div>
+
+                                                    <div>
+                                                        <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" Style="@($"color: {ConsumerColor.Palette.ElementAt(consumer.ColorIndex)}; filter: blur(10px)")" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="consumer-card-content">
+                                                <MudText Typo="Typo.h6" Style="font-weight: bold">@consumer.Name</MudText>
+                                                <MudText Typo="Typo.subtitle1">Ausgaben: @consumer.TotalProductPrice.ToString("0.00")€</MudText>
+                                                <MudText Typo="Typo.subtitle1">Ø-Produktpreis: @(consumer.AverageProductPrice.ToString("0.00"))€</MudText>
+                                            </div>
+                                        </MudPaper>
+                                    </MudItem>
+                                }
+                            }
+                            else
+                            {
+                                <h2>Keine Verbraucher vorhanden</h2>
+                            }
+                        </MudGrid>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+
+
+    </div>
+}
+
+
+
+@code {
+    private bool isLoadingData = true;
+    private bool hasAnyConsumers = false;
+    private List<Consumer> consumers = new List<Consumer>();
+    private string message = string.Empty;
+    private double totalCosts;
+
+    private ChartOptions chartOptions = new ChartOptions();
+
+    private int Index = -1; //default value cannot be 0 -> first selectedindex is 0.
+    double[]? chartData;
+    string[]? chartLabels;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoadingData = true;
+
+        await ConsumerService.GetConsumersAsync();
+        consumers = ConsumerService.Consumers;
+        hasAnyConsumers = consumers.Any();
+
+        if (hasAnyConsumers && consumers.Any(x => x.HasAnyProducts))
+        {
+            var consumersWithProducts = consumers.Where(x => x.HasAnyProducts);
+            totalCosts = consumers.Sum(x => x.TotalProductPrice);
+
+            chartData = consumersWithProducts.Select(x => ((x.TotalProductPrice / totalCosts) * 100)).ToArray();
+            chartLabels = consumersWithProducts.Select(x => $"{x.Name} ({x.TotalProductPrice.ToString("0.00")}€ | {Math.Round((x.TotalProductPrice / totalCosts) * 100)}%)").ToArray();
+            chartOptions.ChartPalette = consumersWithProducts.Select(x => ConsumerColor.Palette.ElementAt(x.ColorIndex)).ToArray();
+        }
+        else
+        {
+            string chartLabelInfo = "Verbraucher & Produkte hinzufügen für Statistiken";
+            if (hasAnyConsumers)
+            {
+                chartLabelInfo = "Produkte hinzufügen für Statistiken";
+            }
+            chartLabels = new string[] { chartLabelInfo };
+            chartData = new double[] { 100 };
+            chartOptions.ChartPalette = new string[] { "#CCCCCCFF" };
+        }
+
+        isLoadingData = false;
+    }
+
+    private void BtnConsumer_Click(int id)
+    {
+        NavigationManager.NavigateTo($"consumers/id/{id}");
+    }
+
+    private async Task OpenConsumerAddDialog()
+    {
+        var parameters = new DialogParameters { ["LocalConsumers"] = consumers! };
+        var dialog = await DialogService.ShowAsync<AddConsumerDialog>("Verbraucher hinzufügen", parameters);
+        var result = await dialog.Result;
+        hasAnyConsumers = consumers.Any();
+    }
+
+
+
+
+}

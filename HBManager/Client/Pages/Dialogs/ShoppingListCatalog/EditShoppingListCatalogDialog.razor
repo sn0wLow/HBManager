@@ -1,0 +1,71 @@
+﻿@inject IDialogService DialogService
+@inject IShoppingListCatalogService ShoppingListCatalogService
+@inject ISnackbar Snackbar
+@namespace HBManager.Client
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="me-5">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-3 mb-n1" />
+            Monatskatalog bearbeiten
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <EditForm Model="@shoppingListCatalogDTO" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <MudNumericField T="int" @bind-Value="@shoppingListCatalogDTO.Budget" For="@(() => shoppingListCatalogDTO.Budget)"
+                             Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.EuroSymbol" AdornmentColor="Color.Success"
+                             Min="1" 
+                             Label="@($"Monatsbudget für {ShoppingListCatalogToEdit.Date.ToString("MMMM")}, {ShoppingListCatalogToEdit.Date.Year}")" 
+                             Class="mb-5" Variant="Variant.Filled" />
+
+            <div class="px-1 py-2 d-flex justify-content-end">
+                <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit">Monatskatalog bearbeiten</MudButton>
+                <MudButton OnClick="Close" Class="ms-1">Schließen</MudButton>
+            </div>
+        </EditForm>
+    </DialogContent>
+</MudDialog>
+@code {
+    [CascadingParameter]
+    public required MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public required ShoppingListCatalog ShoppingListCatalogToEdit { get; set; }
+
+    private ShoppingListCatalogEditDTO shoppingListCatalogDTO = new ShoppingListCatalogEditDTO();
+    private bool processing = false;
+
+    protected override void OnInitialized()
+    {
+        shoppingListCatalogDTO.ID = ShoppingListCatalogToEdit.ID;
+    }
+
+    private void Close() => MudDialog?.Cancel();
+    private async Task OnValidSubmit(EditContext context)
+    {
+        if (processing)
+        {
+            return;
+        }
+
+        processing = true;
+
+        var result = await ShoppingListCatalogService.EditShoppingListCatalog(shoppingListCatalogDTO);
+
+        if (!result.Success)
+        {
+            Snackbar.Add($"{result.Message}", Severity.Error);
+            processing = false;
+            return;
+        }
+
+        var editedShoppingListCatalog = result.Data!;
+
+        ShoppingListCatalogToEdit.Budget = editedShoppingListCatalog.Budget;
+
+        Snackbar.Add("Einkaufskatalog bearbeitet", Severity.Info);
+        MudDialog!.Close(DialogResult.Ok(true));
+        processing = false;
+    }
+}

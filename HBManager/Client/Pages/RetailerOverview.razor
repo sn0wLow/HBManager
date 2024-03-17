@@ -1,0 +1,196 @@
+﻿@page "/retailers"
+@inject IRetailerService RetailerService
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+@attribute [Authorize]
+
+<PageTitle>Händlerübersicht</PageTitle>
+
+@if (isLoadingData)
+{
+    <div>
+        <MudContainer Class="mt-0 mb-5 px-0" MaxWidth="MaxWidth.Large">
+            <MudGrid>
+                <MudItem xs="12" sm="12" md="8">
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="12">
+                            <MudPaper Elevation="2" Class="pa-4">
+                                <MudSkeleton Width="30%" Height="45px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" />
+                                <MudDivider Class="mb-2" />
+                                <MudSkeleton Width="10%" Height="30px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" />
+                                <MudSkeleton Width="15%" Height="30px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" />
+                            </MudPaper>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="12" md="12">
+                            <MudPaper Elevation="2" Class="pa-4">
+                                <MudSkeleton Width="30%" Height="40px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons mb-3" />
+                                <MudSkeleton Width="35%" Height="36px" Animation="Animation.Wave" SkeletonType="SkeletonType.Rectangle" Class="skeletons me-4" />
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+
+                <MudItem xs="12" sm="12" md="4">
+                    <MudPaper Elevation="2" Class="pa-4 d-flex flex-column" Style="aspect-ratio: 1;">
+                        <div class="align-self-center" style="width: 80%; height: 80%">
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="height: 100%; width: 100%" />
+                        </div>
+                        <div class="d-flex justify-content-center flex-row mt-3">
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="width: 20px; height: 20px; margin-right: 5px" />
+                            <MudSkeleton Width="25%" Height="20px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" Style="margin-right: 15px" />
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="width: 20px; height: 20px; margin-right: 5px" />
+                            <MudSkeleton Width="20%" Height="20px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" Style="margin-right: 15px" />
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="width: 20px; height: 20px; margin-right: 5px" />
+                            <MudSkeleton Width="16%" Height="20px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" Style="margin-right: 15px" />
+                        </div>
+                        <div class="d-flex justify-content-center flex-row mt-3">
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="width: 20px; height: 20px; margin-right: 5px" />
+                            <MudSkeleton Width="21%" Height="20px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" Style="margin-right: 15px" />
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="width: 20px; height: 20px; margin-right: 5px" />
+                            <MudSkeleton Width="24%" Height="20px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" Style="margin-right: 15px" />
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="width: 20px; height: 20px; margin-right: 5px" />
+                            <MudSkeleton Width="12%" Height="20px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" Style="margin-right: 15px" />
+                        </div>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </div>
+}
+else
+{
+    <div>
+        <MudContainer Class="mt-0 mb-5 px-0" MaxWidth="MaxWidth.Large">
+            <MudGrid>
+                <MudItem xs="12" sm="12" md="8">
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="12">
+                            <MudPaper Elevation="2" Class="pa-4">
+                                <MudText Typo="Typo.h4">Händlerübersicht</MudText>
+                                <MudDivider Class="mb-2" />
+                                <MudText Typo="Typo.h6">Anzahl der Produkte: @(retailersWithProducts.Sum(x => x.TotalProductAmount))</MudText>
+                                    <MudText Typo="Typo.h6">Gesamtausgaben: @totalCosts.ToString("0.00")€</MudText>
+                                @if (hasAnyProducts)
+                                {
+                                    var cheapestRetailer = retailers.Where(x => x.HasAnyProducts).MinBy(x => x.AverageProductPrice);
+                                    var expensiveRetailer = retailers.Where(x => x.HasAnyProducts).MaxBy(x => x.AverageProductPrice);
+                                    <MudText Typo="Typo.h6">Günstigster Händler: @cheapestRetailer!.Name (Ø @cheapestRetailer!.AverageProductPrice.ToString("0.00")€)</MudText>
+                                    <MudText Typo="Typo.h6">Teuerster Händler: @expensiveRetailer!.Name (Ø @expensiveRetailer!.AverageProductPrice.ToString("0.00")€)</MudText>
+                                }
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+
+                <MudItem xs="12" sm="12" md="4">
+                    <MudPaper Elevation="2" Class="pa-4">
+                        <MudChart ChartType="ChartType.Pie" InputData="@chartData" @bind-SelectedIndex="Index" InputLabels="@chartLabels" ChartOptions="@chartOptions" />
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" sm="12" md="12">
+                    <MudPaper Elevation="2" Class="px-4 py-4">
+                        <MudGrid Justify="Justify.Center" Spacing="4" Class="py-4">
+                            @if (hasAnyProducts)
+                            {
+                                int cardColorindex = 0;
+                                foreach (var retailer in retailersWithProducts)
+                                {
+                                    var id = retailer.ID;
+                                    var cardColor = defaultPalette!.ElementAt(cardColorindex);
+                                    <MudItem>
+                                        <MudPaper Elevation="4" Class="retailer-card-conainer" @onclick="@(() => BtnRetailer_Click(id))">
+                                            <div class="retailer-card-header">
+                                                <div class="retailer-card-header-content mx-auto my-auto">
+                                                    <div>
+                                                        <MudIcon Icon="@Icons.Material.Filled.Store" Size="Size.Large" Style="@($"color: {cardColor}; filter: blur(10px);transform: scale(1.4)")" />
+                                                    </div>
+                                                    <div>
+                                                        <MudIcon Icon="@Icons.Material.Filled.Store" Size="Size.Large" Style="@($"color: {cardColor};transform: scale(1.4)")" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="retailer-card-content">
+                                                <MudText Typo="Typo.h6" Style="font-weight: bold">@retailer.Name</MudText>
+                                                <MudText Typo="Typo.subtitle1">Einkäufe: @retailer.TotalVisits</MudText>
+                                                <MudText Typo="Typo.subtitle1">Produkte: @retailer.TotalProductAmount</MudText>
+                                                <MudText Typo="Typo.subtitle1">Ausgaben: @retailer.TotalProductPrice.ToString("0.00")€</MudText>
+                                                <MudText Typo="Typo.subtitle1">Ø-Produktpreis: @(retailer.AverageProductPrice.ToString("0.00"))€</MudText>
+                                            </div>
+                                        </MudPaper>
+                                    </MudItem>
+
+                                    cardColorindex++;
+                                }
+                            }
+                            else
+                            {
+                                <h2>Keine Produkte vorhanden</h2>
+                            }
+                        </MudGrid>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+
+
+    </div>
+}
+
+@code {
+    private bool isLoadingData = true;
+    private bool hasAnyProducts = false;
+    private List<Retailer> retailers = new List<Retailer>();
+    private List<Retailer> retailersWithProducts = new List<Retailer>();
+    private string message = string.Empty;
+    private double totalCosts;
+
+    private ChartOptions chartOptions = new ChartOptions();
+
+    private int Index = -1; //default value cannot be 0 -> first selectedindex is 0.
+    double[]? chartData;
+    string[]? chartLabels;
+    string[]? defaultPalette = new MudChart().ChartOptions.ChartPalette;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoadingData = true;
+
+        var result = await RetailerService.GetRetailersWithProductInfoAsync();
+
+        if (result.Success)
+        {
+            retailers = result.Data!;
+
+            hasAnyProducts = retailers.Any(x => x.HasAnyProducts);
+
+            if (hasAnyProducts)
+            {
+                retailersWithProducts = retailers.Where(x => x.HasAnyProducts).ToList();
+                totalCosts = retailers.Sum(x => x.TotalProductPrice);
+
+
+                chartData = retailersWithProducts.Select(x => ((x.TotalProductPrice / totalCosts) * 100)).ToArray();
+                chartLabels = retailersWithProducts.Select(x => $"{x.Name} ({x.TotalProductPrice.ToString("0.00")}€ | {Math.Round((x.TotalProductPrice / totalCosts) * 100)}%)").ToArray();
+                chartOptions.ChartPalette = defaultPalette;
+            }
+            else
+            {
+                chartLabels = new string[] { "Produkte hinzufügen für Statistiken" };
+                chartData = new double[] { 100 };
+                chartOptions.ChartPalette = new string[] { "#CCCCCCFF" };
+            }
+        }
+
+        isLoadingData = false;
+    }
+
+    private void BtnRetailer_Click(int id)
+    {
+        NavigationManager.NavigateTo($"retailers/id/{id}");
+    }
+
+}

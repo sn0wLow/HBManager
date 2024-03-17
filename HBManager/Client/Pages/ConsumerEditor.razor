@@ -1,0 +1,324 @@
+﻿@page "/consumers/id/{ConsumerID:int}"
+@inject IConsumerService ConsumerService
+@inject IDialogService DialogService
+@attribute [Authorize]
+
+<PageTitle>Verbaucher bearbeiten</PageTitle>
+
+@if (isLoadingData)
+{
+    <div>
+        <MudContainer Class="mt-0 mb-5 px-0" Style="padding-top: 56px" MaxWidth="MaxWidth.Large">
+            <MudGrid>
+                <MudItem xs="12" sm="12" md="8">
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="12">
+                            <MudPaper Elevation="2" Class="pa-4">
+                                <MudSkeleton Width="30%" Height="45px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" />
+                                <MudDivider Class="mb-2" />
+                                <MudSkeleton Width="15%" Height="30px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" />
+                                <MudSkeleton Width="22%" Height="30px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" />
+                                <MudSkeleton Width="20%" Height="30px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" />
+                            </MudPaper>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="12" md="12">
+                            <MudPaper Elevation="2" Class="pa-4">
+                                <MudSkeleton Width="40%" Height="40px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons mb-3" />
+                                <div class="d-flex flex-row">
+                                    <MudSkeleton Width="35%" Height="36px" Animation="Animation.Wave" SkeletonType="SkeletonType.Rectangle" Class="skeletons me-4" />
+                                    <MudSkeleton Width="35%" Height="36px" Animation="Animation.Wave" SkeletonType="SkeletonType.Rectangle" Class="skeletons" />
+                                </div>
+
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+
+                <MudItem xs="12" sm="12" md="4">
+                    <MudPaper Elevation="2" Class="pa-4 d-flex flex-column">
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </div>
+}
+else
+{
+    @if (consumer is null)
+    {
+
+        <div class="d-flex justify-center" style="height: 60vh">
+            <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="0">
+                <h4 role="alert" class="text-center">@resultMessage</h4>
+                <MudButton Href="consumers" Variant="Variant.Filled" Color="Color.Primary" Style="color: var(--mud-palette-tertiary-text);">Zurück zur Übersicht</MudButton>
+            </MudStack>
+        </div>
+    }
+    else
+    {
+        <div>
+
+
+            <MudContainer Class="mt-0 mb-5 px-0" MaxWidth="MaxWidth.Large">
+                <MudBreadcrumbs Items="breadCrumbItems"></MudBreadcrumbs>
+                <MudGrid>
+                    <MudItem xs="12" sm="12" md="8">
+                        <MudGrid>
+                            <MudItem xs="12" sm="12" md="12">
+                                <MudPaper Elevation="2" Class="pa-4">
+                                    <MudText Typo="Typo.h4">@consumer.Name</MudText>
+                                    <MudDivider Class="mb-2" />
+                                    <MudText Typo="Typo.h6">Produkte: @amountProducts</MudText>
+                                    <MudText Typo="Typo.h6">Gesamtausgaben: @(totalProductCosts.ToString("0.00"))€</MudText>
+                                    <MudText Typo="Typo.h6">Ø-Produktpreis: @(averageProductPrice.ToString("0.00"))€</MudText>
+                                </MudPaper>
+                            </MudItem>
+
+                            <MudItem xs="12" sm="12" md="12">
+                                <MudPaper Elevation="2" Class="pa-4">
+                                    <MudText Typo="Typo.h6" Class="mb-3">Optionen für diesen Verbraucher</MudText>
+                                    <div class="d-flex gap-3">
+                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Settings" Style="color: var(--mud-palette-tertiary-text);" Color="Color.Primary" OnClick="OpenEditConsumerDialog">Verbraucher bearbeiten</MudButton>
+                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="OpenDeleteConsumerDialog">Verbraucher entfernen</MudButton>
+                                    </div>
+
+                                </MudPaper>
+                            </MudItem>
+
+                        </MudGrid>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="12" md="4">
+                        <MudPaper Elevation="2" Class="pa-4">
+                            <MudChart ChartType="ChartType.Pie" InputData="@chartData" InputLabels="@chartLabels" />
+                        </MudPaper>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="12" md="12">
+                        <MudPaper Elevation="2" Class="pa-4">
+                            <div class="mx-auto editor-container">
+                                <MudText Typo="Typo.h4" Class="mb-4">Produkte durchsuchen</MudText>
+                                <MudTable Class="mx-auto mud-table-products"
+                                  Breakpoint="Breakpoint.Sm"
+                                  Items="@consumer.Products" Hover="true" Bordered="false" Striped="false" ReadOnly="false"
+                                  Filter="new Func<Product, bool>(FilterTableUI)" Virtualize="false"
+                                  EditButtonPosition="TableEditButtonPosition.End" EditTrigger="TableEditTrigger.EditButton"
+                                  FixedHeader="true" FixedFooter="true">
+                                    <ToolBarContent>
+
+                                        <MudGrid Spacing="0">
+                                            <MudItem xs="12" sm="12" md="5" Class="mt-4">
+                                                <MudText>Produkte</MudText>
+                                            </MudItem>
+                                            <MudItem xs="12" sm="12" md="7">
+                                                <MudTextField @bind-Value="searchString" Placeholder="Suche" Immediate="false" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                                            </MudItem>
+                                        </MudGrid>
+                                    </ToolBarContent>
+                                    <HeaderContent>
+                                        <MudTh>
+                                            <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<Product, object>(x=>x.ID)">#</MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh>
+                                            <MudTableSortLabel SortBy="new Func<Product, object>(x=>x.Title)">Bezeichnung</MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh>
+                                            <MudTableSortLabel SortBy="new Func<Product, object>(x=>x.ProductType!.Name)">Produkttyp</MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh>
+                                            <MudTableSortLabel SortBy="new Func<Product, object>(x => string.Join(',', x.Consumers.OrderBy(c => c.ID).Select(c => c.ID)))">Verbraucher</MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh>
+                                            <MudTableSortLabel SortBy="new Func<Product, object>(x=>x.Price * x.Quantity)">Preis</MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh>
+                                            <MudTableSortLabel SortBy="new Func<Product, object>(x=>x.Quantity)">Anzahl</MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh />
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd DataLabel="ID">@context.ID</MudTd>
+                                        <MudTd DataLabel="Bezeichnung">@context.Title</MudTd>
+                                        <MudTd DataLabel="Produkttyp">@context.ProductType!.Name</MudTd>
+                                        <MudTd DataLabel="Verbraucher">
+                                            <MudAvatarGroup Max="3" Spacing="2" MaxColor="Color.Dark" MaxSize="Size.Small" OutlineColor="Color.Surface">
+                                                @foreach (var consumer in context.Consumers)
+                                                {
+                                                    var backgroundColor = ConsumerColor.Palette.ElementAt(consumer.ColorIndex);
+                                                    var colorCSS = consumer.ColorIndex >= 7 && consumer.ColorIndex <= 8 ? ";color: #2e2d2dff" : null;
+                                                    <MudAvatar Size="Size.Small" Style="@($"background-color: { backgroundColor } {colorCSS}")">
+                                                        @consumer.Name.Substring(0, 2).ToUpper()
+                                                    </MudAvatar>
+                                                }
+                                            </MudAvatarGroup>
+                                        </MudTd>
+                                        <MudTd DataLabel="Preis">@context.Price.ToString("0.00")€</MudTd>
+                                        <MudTd DataLabel="Anzahl">@context.Quantity</MudTd>
+                                        <MudTd DataLabel="">
+                                            <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Filled.DatasetLinked" Class="pa-0 align-self-end" Href="@($"shoppinglists/id/{context.ShoppingListID}?search={context.Title}")" />
+                                        </MudTd>
+                                    </RowTemplate>
+                                    <NoRecordsContent>
+                                        <div class="table-no-records-content">
+                                            <MudText Typo="Typo.h6">Keine Produkte vorhanden</MudText>
+                                        </div>
+                                    </NoRecordsContent>
+                                    <PagerContent>
+                                        <MudTablePager PageSizeOptions="new int[]{10, 50, 100}" RowsPerPageString="Produkte pro Seite" />
+                                    </PagerContent>
+                                </MudTable>
+                            </div>
+
+
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+
+            </MudContainer>
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public int ConsumerID { get; set; }
+
+    private bool firstSet = true;
+    private bool isLoadingData = true;
+
+    private string resultMessage = string.Empty;
+
+    private List<BreadcrumbItem>? breadCrumbItems;
+
+    private string[]? chartLabels;
+    private double[]? chartData;
+
+    private Consumer? consumer = null;
+
+    private bool hasAnyProducts = false;
+    private double amountProducts = 0;
+    private double totalProductCosts = 0;
+    private double averageProductPrice = 0;
+    private Product? mostExpensiveProduct = null;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!firstSet)
+        {
+            return;
+        }
+
+        firstSet = false;
+        isLoadingData = true;
+
+        var result = await ConsumerService.GetConsumerByIDAsync(ConsumerID);
+
+        if (result.Success)
+        {
+            breadCrumbItems = new List<BreadcrumbItem>
+            {
+                new BreadcrumbItem("Übersicht", href: "consumers"),
+                new BreadcrumbItem("Verbraucher", href: null, disabled: true)
+            };
+
+
+            consumer = result.Data;
+            hasAnyProducts = consumer!.Products.Any();
+
+            if (hasAnyProducts)
+            {
+                amountProducts = consumer.Products.Count();
+                totalProductCosts = (double)Math.Round(consumer.Products.Sum(x => (x.Price * x.Quantity) / x.Consumers.Count), 2);
+                averageProductPrice = (double)Math.Round(consumer.Products.Average(x => x.Price), 2);
+                mostExpensiveProduct = consumer.Products.MaxBy(x => x.Price);
+
+                List<string> labels = new List<string>();
+                List<double> data = new List<double>();
+
+
+                var productByProductType = consumer!.Products
+                .GroupBy(pc => pc.ProductTypeID)
+                .Select(g => new
+                {
+                    ProductTypeName = g.FirstOrDefault()!.ProductType!.Name,
+                    PriceTotal = g.Sum(x => (x.Quantity * x.Price) / x.Consumers.Count)
+                }).OrderByDescending(x => x.PriceTotal).ToList();
+
+                var topFiveProducts = productByProductType.Take(5).ToList();
+                var otherProducts = productByProductType.Skip(5).ToList();
+
+                if (otherProducts.Any())
+                {
+                    var topProductsByProductType = topFiveProducts.Concat(new[] { new {
+                    ProductTypeName = "Restliche Produkttypen",
+                    PriceTotal = otherProducts.Sum(x => x.PriceTotal)} }).ToList();
+
+                    foreach (var productProductTypeLink in topProductsByProductType)
+                    {
+                        var percent = Math.Round(((double)productProductTypeLink.PriceTotal / totalProductCosts) * 100);
+                        labels.Add($"{productProductTypeLink.ProductTypeName} ({productProductTypeLink.PriceTotal.ToString("0.00")}€ | {percent}%)");
+                        data.Add(percent);
+                    }
+                }
+                else
+                {
+                    foreach (var productProductTypeLink in topFiveProducts)
+                    {
+                        var percent = Math.Round(((double)productProductTypeLink.PriceTotal / totalProductCosts) * 100);
+                        labels.Add($"{productProductTypeLink.ProductTypeName} ({productProductTypeLink.PriceTotal.ToString("0.00")}€ | {percent}%)");
+                        data.Add(percent);
+                    }
+                }
+
+
+                chartLabels = labels.ToArray();
+                chartData = data.ToArray();
+            }
+            else
+            {
+
+            }
+        }
+
+        resultMessage = result.Message;
+        firstSet = false;
+        isLoadingData = false;
+    }
+
+    private async Task OpenEditConsumerDialog()
+    {
+        var parameters = new DialogParameters { ["ConsumerToEdit"] = consumer };
+        var dialog = await DialogService.ShowAsync<EditConsumerDialog>("Verbraucher editieren", parameters);
+        var result = await dialog.Result;
+    }
+
+    private async Task OpenDeleteConsumerDialog()
+    {
+        var parameters = new DialogParameters { ["ConsumerToDelete"] = consumer };
+        var dialog = await DialogService.ShowAsync<DeleteConsumerDialog>("Verbraucher entfernen", parameters);
+        var result = await dialog.Result;
+    }
+
+    private string? searchString = "";
+    private bool FilterTableUI(Product product) => FilterTable(product, searchString!);
+    private bool FilterTable(Product product, string searchStringTable)
+    {
+        if (string.IsNullOrWhiteSpace(searchStringTable))
+            return true;
+        if (product.Title.Contains(searchStringTable, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (product.ProductType!.Name.Contains(searchStringTable, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (product.Consumers.Any(x => x.Name.Contains(searchStringTable, StringComparison.OrdinalIgnoreCase)))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+
+
+
+}

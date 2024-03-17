@@ -1,0 +1,57 @@
+﻿@inject ILocalStorageService LocalStorage
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ISnackbar Snackbar
+
+<div class="nav-container">
+
+    <div class="nav-header">
+        <MudText Typo="Typo.h6" Class="nav-header-text">HBManager</MudText>
+        <MudIconButton Class="custom-navbar-toggler" Icon="@Icons.Material.Filled.Close"
+                       Edge="Edge.Start" aria-label="toggle-sidebar" OnClick="ToggleDrawer" />
+    </div>
+
+    <div class="nav-content">
+        <nav>
+            <div class="nav-item" onclick="@(() => ToggleDrawer())">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    <span class="oi oi-home mb-1" aria-hidden="true"></span>
+                    <MudText Typo="Typo.body1" Class="nav-menu-text" aria-label="home">Home</MudText>
+                </NavLink>
+            </div>
+            <div class="nav-item" onclick="@(() => ToggleDrawer())">
+                <NavLink class="nav-link" href="shoppinglists">
+                    <span class="oi oi-calendar" aria-hidden="true"></span>
+                    <MudText Typo="Typo.body1" Class="nav-menu-text" aria-label="shoppinglists">Einkäufe</MudText>
+                </NavLink>
+            </div>
+
+            <div class="nav-item" onclick="@(() => ToggleDrawer())">
+                <NavLink class="nav-link" href="consumers">
+                    <MudIcon Class="mb-1" Style="margin-left: -0.25rem; margin-right: 0.75rem" Icon="@Icons.Material.Filled.SupervisedUserCircle" Color="Color.Default" />
+                    <MudText Typo="Typo.body1" Class="nav-menu-text" aria-label="consumers">Verbraucher</MudText>
+                </NavLink>
+            </div>
+
+            <div class="nav-item" onclick="@(() => ToggleDrawer())">
+                <NavLink class="nav-link" href="retailers">
+                    <MudIcon Class="mb-1" Style="margin-left: -0.25rem; margin-right: 0.75rem" Icon="@Icons.Material.Filled.Store" Color="Color.Default" />
+                    <MudText Typo="Typo.body1" Class="nav-menu-text" aria-label="retailers">Händler</MudText>
+                </NavLink>
+            </div>
+
+        </nav>
+    </div>
+
+
+
+</div>
+
+@code {
+    public event Action? ToggledDrawer;
+
+    private void ToggleDrawer()
+    {
+        ToggledDrawer?.Invoke();
+    }
+}

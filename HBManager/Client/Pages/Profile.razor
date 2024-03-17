@@ -1,0 +1,14 @@
+﻿@page "/profile"
+@inject IAuthService AuthService
+@attribute [Authorize]
+
+<PageTitle>Profilansicht</PageTitle>
+
+<AuthorizeView>
+
+    <h3>Angemeldet als <i>@context.User.Identity!.Name</i>.</h3>
+</AuthorizeView>
+
+@code {
+
+}

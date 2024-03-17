@@ -1,0 +1,444 @@
+﻿@page "/shoppinglists/{year:int}/{month:int}"
+@inject IShoppingListCatalogService ShoppingListCatalogService
+@inject IConsumerService ConsumerService
+@inject IRetailerService RetailerService
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+@* @attribute [Authorize] *@
+
+<PageTitle>Monatliche Einkaufsübersicht</PageTitle>
+
+@if (loadingData)
+{
+    <ShoppingListOverviewSkeleton/>
+}
+else
+{
+    @if (shoppingListCatalog is null)
+    {
+        <div class="d-flex justify-center" style="height: 60vh">
+            <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="0">
+                <h4 role="alert" class="text-center">@message</h4>
+                <MudButton Href="shoppinglists" Variant="Variant.Filled" Color="Color.Primary" Style="color: var(--mud-palette-tertiary-text);">Zurück zur Übersicht</MudButton>
+            </MudStack>
+        </div>
+    }
+    else
+    {
+        <div>
+            <MudContainer Class="mt-0 px-0" MaxWidth="MaxWidth.Large">
+                <MudBreadcrumbs Items="breadCrumbItems"></MudBreadcrumbs>
+
+                <MudGrid>
+                    <MudItem xs="12" sm="12" md="6">
+                        <MudGrid>
+                            <MudItem xs="12" sm="12" md="12">
+                                <MudPaper Elevation="2" Class="pa-4">
+                                    <MudText Typo="Typo.h4">@shoppingListCatalog.Date.ToString("MMMM"), @shoppingListCatalog.Date.Year</MudText>
+                                    <MudDivider Class="mb-2" />
+                                    <MudText Typo="Typo.h6">Einkäufe: @shoppingListCatalog.ShoppingLists.Count</MudText>
+                                    <MudText Typo="Typo.h6">Produkte: @shoppingListCatalog.ShoppingLists.Sum(x => x.Products.Count)</MudText>
+                                    <MudText Typo="Typo.h6">Gesamtkosten: @totalCosts.ToString("0.00")€</MudText>
+                                    <MudText Typo="Typo.h6">Budget: @((shoppingListCatalog.Budget - totalCosts).ToString("0.00"))€</MudText>
+                                    @*<MudNumericField @bind-Value="budget" Label="Budget" Variant="Variant.Text" Min="1" Max="5000" Style="width: 25%;" />*@
+                                </MudPaper>
+                            </MudItem>
+
+                            <MudItem xs="12" sm="12" md="12">
+                                <MudPaper Elevation="2" Class="pa-4">
+                                    <MudText Typo="Typo.h6" Class="mb-3">Optionen für diesen Monatskatalog</MudText>
+                                    <MudGrid Spacing="2" Justify="Justify.FlexStart" Class="mx-auto">
+                                        <MudItem>
+                                            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddShoppingCart" Color="Color.Tertiary" OnClick="OpenShoppingListAddDialog">Einkauf hinzufügen</MudButton>
+                                        </MudItem>
+
+                                        <MudItem>
+                                            <MudGrid Spacing="2" Justify="Justify.FlexStart">
+                                                <MudItem>
+                                                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Settings" Color="Color.Primary" Style="color: var(--mud-palette-tertiary-text);" OnClick="OpenShoppingListCatalogEditDialog">Katalog bearbeiten</MudButton>
+                                                </MudItem>
+                                                <MudItem>
+                                                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="OpenShoppingListCatalogDeleteDialog">Katalog löschen</MudButton>
+                                                </MudItem>
+                                            </MudGrid>
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudPaper>
+                            </MudItem>
+                        </MudGrid>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="12" md="6">
+                        <MudPaper Elevation="2">
+                            <MudChart ChartType="ChartType.Line" ChartSeries="@Series" XAxisLabels="@XAxisLabels" ChartOptions="@options" Width="100%" CanHideSeries="@canHideLineChartSeries">
+                            </MudChart>
+                            @*<MudChart ChartType="ChartType.Pie" InputData="@data" @bind-SelectedIndex="Index" InputLabels="@labels" ChartOptions="@chartOptions" />*@
+                        </MudPaper>
+                    </MudItem>
+
+
+
+
+                    <MudItem xs="12" sm="12" md="12">
+                        <MudPaper Elevation="2" Class="px-4 py-4">
+                            <MudGrid Justify="Justify.Center" Spacing="4" Class="py-4">
+
+                                @if (shoppingListCatalog.ShoppingLists.Any())
+                                {
+                                    @foreach (var shoppingList in shoppingListCatalog.ShoppingLists)
+                                    {
+                                        <MudItem>
+                                            <MudPaper Elevation="4" Class="shopping-list-card-container" @onclick="@(() => ShoppingList_Click(shoppingList))">
+                                                <div class="container-bg pa-4">
+                                                    <div class="top-shape">
+                                                    </div>
+                                                    <div class="card-content-container">
+                                                        <div class="shopping-list-card-header">
+                                                            <MudText Typo="Typo.h5">@shoppingList.Date.ToString("dddd"), @shoppingList.Date.ToString("m")</MudText>
+                                                        </div>
+                                                        <div class="shopping-list-card-content">
+                                                            <MudText Typo="Typo.h3" Class="mt-5">@RetailerService.Retailers.First(x => x.ID == shoppingList.RetailerID).Name</MudText>
+                                                        </div>
+                                                        <div class="shopping-list-card-footer">
+                                                            <ul class="shopping-list-card-stats-row">
+                                                                <li class="col" title="@shoppingList.Products.Count">
+                                                                    <p>Produkte</p>
+                                                                    <p>@shoppingList.Products.Count</p>
+                                                                </li>
+                                                                <li class="col" title="@shoppingList.Products.Sum(x => x.Price).ToString("0.00")">
+                                                                    <p>Gesamtkosten</p>
+                                                                    <p>@shoppingList.Products.Sum(x => x.Price * x.Quantity)€</p>
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </MudPaper>
+                                        </MudItem>
+                                    }
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.h6">Keine Einkäufe vorhanden</MudText>
+                                }
+                            </MudGrid>
+                        </MudPaper>
+                    </MudItem>
+
+                </MudGrid>
+            </MudContainer>
+        </div>
+    } 
+}
+
+
+
+
+@code {
+    private bool loadingData = true;
+    private string message = string.Empty;
+    private ShoppingListCatalog? shoppingListCatalog;
+    private bool firstSet = true;
+    private List<BreadcrumbItem>? breadCrumbItems;
+    private double totalCosts;
+    private bool canHideLineChartSeries;
+
+    private ChartOptions chartOptions = new ChartOptions();
+
+    [Parameter]
+    public int Year { get; set; }
+    [Parameter]
+    public int Month { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!firstSet)
+        {
+            return;
+        }
+
+        firstSet = false;
+
+        loadingData = true;
+
+        var result = await ShoppingListCatalogService.GetShoppingListCatalogByYearMonthAsync(Year, Month);
+        await ConsumerService.GetConsumersAsync();
+        await RetailerService.GetRetailersAsync();
+
+        if (!result.Success)
+        {
+            message = result.Message;
+        }
+        else
+        {
+            shoppingListCatalog = result.Data;
+            shoppingListCatalog!.ShoppingLists = shoppingListCatalog!.ShoppingLists.OrderBy(x => x.Date.Day).ToList();
+
+            AddLineChartHeader();
+
+            if (shoppingListCatalog!.ShoppingLists.Any() && shoppingListCatalog!.ShoppingLists.Any(x => x.Products.Any()))
+            {
+                AddLineChartData();
+                canHideLineChartSeries = true;
+            }
+            else
+            {
+
+                var chartSeries = new ChartSeries()
+                    {
+                        Name = shoppingListCatalog!.ShoppingLists.Any() ?
+                                                            "Produkte hinzufügen für Statistiken" :
+                                                            "Einkäufe & Produkte hinzufügen für Statistiken",
+                        Data = new double[] { 10, 20, 30, 40, 50, 80 }
+                    };
+
+                options.YAxisTicks = 10;
+                options.ChartPalette = new string[] { "00000000" };
+                Series.Add(chartSeries);
+                                canHideLineChartSeries = false;
+            }
+
+            breadCrumbItems = new List<BreadcrumbItem>
+                {
+                    new BreadcrumbItem("Übersicht", href: $"shoppinglists?year={Year}"),
+                    new BreadcrumbItem("Monatskatalog", href: null, disabled: true)
+                };
+
+
+        }
+
+        loadingData = false;
+    }
+
+    private void AddLineChartHeader()
+    {
+        int daysInCurrentMonth = DateTime.DaysInMonth(shoppingListCatalog!.Date.Year, shoppingListCatalog!.Date.Month);
+
+        int monthSegementTwo = (int)(daysInCurrentMonth * 0.2);
+        int monthSegementThree = (int)(daysInCurrentMonth * 0.4);
+        int monthSegementFour = (int)(daysInCurrentMonth * 0.6);
+        int monthSegementFive = (int)(daysInCurrentMonth * 0.8);
+        int monthSegementSix = daysInCurrentMonth;
+
+        XAxisLabels = new string[]
+        {
+            "Tag 1",
+            $"Tag {monthSegementTwo}",
+            $"Tag {monthSegementThree}",
+            $"Tag {monthSegementFour}",
+            $"Tag {monthSegementFive}",
+            $"Tag {daysInCurrentMonth}"
+        };
+
+
+    }
+
+    private void AddLineChartData()
+    {
+        var distinctConsumerIDs = shoppingListCatalog!.ShoppingLists
+            .SelectMany(x => x.Products)
+            .Where(x => x.Consumers.Any())
+            .SelectMany(x => x.Consumers)
+            .DistinctBy(x => x.ID)
+            .Select(x => x.ID)
+            .Order();
+
+        var consumersWithProducts = ConsumerService.Consumers.Where(x => distinctConsumerIDs.Contains(x.ID));
+        int daysInCurrentMonth = DateTime.DaysInMonth(shoppingListCatalog!.Date.Year, shoppingListCatalog!.Date.Month);
+
+        int monthSegementOne = 1;
+        int monthSegementTwo = (int)(daysInCurrentMonth * 0.2);
+        int monthSegementThree = (int)(daysInCurrentMonth * 0.4);
+        int monthSegementFour = (int)(daysInCurrentMonth * 0.6);
+        int monthSegementFive = (int)(daysInCurrentMonth * 0.8);
+        int monthSegementSix = daysInCurrentMonth;
+
+        int? max = null;
+        var shoppingListsByDay = shoppingListCatalog!.ShoppingLists.GroupBy(x => x.Date.Day);
+
+        totalCosts = (double)shoppingListCatalog!.ShoppingLists.Sum(x => x.Products.Sum(y => (y.Price * y.Quantity)));
+
+        List<string> colors = new List<string>();
+
+
+        foreach (var id in distinctConsumerIDs)
+        {
+            var sumProductPrice_One = shoppingListsByDay // 1
+                .Where(x => x.Key == monthSegementOne)
+                .SelectMany(x => x)
+                .Sum(x => x.Products.Where(x => x.Consumers.Any(x => x.ID == id))
+                .Sum(x => (double)((x.Price * x.Quantity) / x.Consumers.Count)));
+
+            var sumProductPrice_Two = sumProductPrice_One + shoppingListsByDay // 2-6
+                .Where(x => x.Key > monthSegementOne && x.Key <= monthSegementTwo)
+                .SelectMany(x => x)
+                .Sum(x => x.Products.Where(x => x.Consumers.Any(x => x.ID == id))
+                .Sum(x => (double)((x.Price * x.Quantity) / x.Consumers.Count)));
+
+
+            var sumProductPrice_Three = sumProductPrice_Two + shoppingListsByDay // 7-12
+                .Where(x => x.Key > monthSegementTwo && x.Key <= monthSegementThree)
+                .SelectMany(x => x)
+                .Sum(x => x.Products.Where(x => x.Consumers.Any(x => x.ID == id))
+                .Sum(x => (double)((x.Price * x.Quantity) / x.Consumers.Count)));
+
+
+            var sumProductPrice_Four = sumProductPrice_Three + shoppingListsByDay // 13-18
+                .Where(x => x.Key > monthSegementThree && x.Key <= monthSegementFour)
+                .SelectMany(x => x)
+                .Sum(x => x.Products.Where(x => x.Consumers.Any(x => x.ID == id))
+                .Sum(x => (double)((x.Price * x.Quantity) / x.Consumers.Count)));
+
+
+            var sumProductPrice_Five = sumProductPrice_Four + shoppingListsByDay // 18-24
+                .Where(x => x.Key > monthSegementFour && x.Key <= monthSegementFive)
+                .SelectMany(x => x)
+                .Sum(x => x.Products.Where(x => x.Consumers.Any(x => x.ID == id))
+                .Sum(x => (double)((x.Price * x.Quantity) / x.Consumers.Count)));
+
+
+            var sumProductPrice_Six = sumProductPrice_Five + shoppingListsByDay // 25-30
+                .Where(x => x.Key > monthSegementFive && x.Key <= monthSegementSix)
+                .SelectMany(x => x)
+                .Sum(x => x.Products.Where(x => x.Consumers.Any(x => x.ID == id))
+                .Sum(x => (double)((x.Price * x.Quantity) / x.Consumers.Count)));
+
+            var percent = Math.Round((sumProductPrice_Six / totalCosts) * 100);
+
+            if (max is null || max < sumProductPrice_Six)
+            {
+                max = (int)sumProductPrice_Six;
+            }
+
+            var consumerName = consumersWithProducts.First(x => x.ID == id).Name;
+            var chartSeries = new ChartSeries()
+                {
+                    Name = $"{consumerName} ({sumProductPrice_Six.ToString("0.00")}€ | {percent}%)",
+                    Data = new double[]
+                            {
+                                sumProductPrice_One, sumProductPrice_Two, sumProductPrice_Three,
+                                sumProductPrice_Four, sumProductPrice_Five, sumProductPrice_Six
+                            }
+                };
+
+            colors.Add(ConsumerColor.Palette.ElementAt(consumersWithProducts.First(x => x.ID == id).ColorIndex));
+
+            Series.Add(chartSeries);
+        }
+
+
+        var shoppingListsWithoutConsumers = shoppingListCatalog!.ShoppingLists
+        .Where(x => x.Products.Any(x => !x.Consumers.Any()));
+
+        if (shoppingListsWithoutConsumers.Any())
+        {
+            var shoppingListsWithoutConsumersByDay = shoppingListsWithoutConsumers.GroupBy(x => x.Date);
+
+            double sumProductPrice_One_NoConsumer = 0;
+            double sumProductPrice_Two_NoConsumer = 0;
+            double sumProductPrice_Three_NoConsumer = 0;
+            double sumProductPrice_Four_NoConsumer = 0;
+            double sumProductPrice_Five_NoConsumer = 0;
+            double sumProductPrice_Six_NoConsumer = 0;
+
+            foreach (var shoppingList in shoppingListsWithoutConsumersByDay)
+            {
+                sumProductPrice_One_NoConsumer = sumProductPrice_One_NoConsumer + shoppingList // 1
+                    .Where(x => x.Date.Day == monthSegementOne)
+                    .Sum(x => x.Products.Where(x => !x.Consumers.Any())
+                    .Sum(x => (double)(x.Price * x.Quantity)));
+
+                sumProductPrice_Two_NoConsumer = sumProductPrice_One_NoConsumer + shoppingList // 2-6
+                    .Where(x => x.Date.Day > monthSegementOne && x.Date.Day <= monthSegementTwo)
+                    .Sum(x => x.Products.Where(x => !x.Consumers.Any())
+                    .Sum(x => (double)(x.Price * x.Quantity)));
+
+
+                sumProductPrice_Three_NoConsumer = sumProductPrice_Two_NoConsumer + shoppingList // 7-12
+                    .Where(x => x.Date.Day > monthSegementTwo && x.Date.Day <= monthSegementThree)
+                    .Sum(x => x.Products.Where(x => !x.Consumers.Any())
+                    .Sum(x => (double)(x.Price * x.Quantity)));
+
+
+                sumProductPrice_Four_NoConsumer = sumProductPrice_Three_NoConsumer + shoppingList // 13-18
+                    .Where(x => x.Date.Day > monthSegementThree && x.Date.Day <= monthSegementFour)
+                    .Sum(x => x.Products.Where(x => !x.Consumers.Any())
+                    .Sum(x => (double)(x.Price * x.Quantity)));
+
+
+                sumProductPrice_Five_NoConsumer = sumProductPrice_Four_NoConsumer + shoppingList // 18-24
+                    .Where(x => x.Date.Day > monthSegementFour && x.Date.Day <= monthSegementFive)
+                    .Sum(x => x.Products.Where(x => !x.Consumers.Any())
+                    .Sum(x => (double)(x.Price * x.Quantity)));
+
+
+                sumProductPrice_Six_NoConsumer = sumProductPrice_Five_NoConsumer + shoppingList // 25-30
+                    .Where(x => x.Date.Day > monthSegementFive && x.Date.Day <= monthSegementSix)
+                    .Sum(x => x.Products.Where(x => !x.Consumers.Any())
+                    .Sum(x => (double)(x.Price * x.Quantity)));
+
+            }
+
+            var percentNoConsumer = Math.Round((sumProductPrice_Six_NoConsumer / totalCosts) * 100);
+
+            if (max is null || max < sumProductPrice_Six_NoConsumer)
+            {
+                max = (int)sumProductPrice_Six_NoConsumer;
+            }
+
+            var chartSeriesNoConsumer = new ChartSeries()
+                {
+                    Name = $"Unzugeordnet ({sumProductPrice_Six_NoConsumer.ToString("0.00")}€ | {percentNoConsumer}%)",
+                    Data = new double[]
+                                    {
+                        sumProductPrice_One_NoConsumer, sumProductPrice_Two_NoConsumer, sumProductPrice_Three_NoConsumer,
+                        sumProductPrice_Four_NoConsumer, sumProductPrice_Five_NoConsumer, sumProductPrice_Six_NoConsumer
+                                    }
+                };
+
+            colors.Add("#1f1f1fff");
+
+            Series.Add(chartSeriesNoConsumer);
+        }
+
+
+        options.ChartPalette = colors.ToArray();
+        options.YAxisTicks = Math.Max(Math.Min((int)((double)max! * 0.10), 200), 1);
+    }
+
+    private void ShoppingList_Click(ShoppingList shoppingList)
+    {
+        NavigationManager.NavigateTo($"/shoppinglists/id/{shoppingList.ID}");
+    }
+
+    private async Task OpenShoppingListAddDialog()
+    {
+        var parameters = new DialogParameters { ["LocalShoppingListCatalog"] = shoppingListCatalog };
+        var dialog = await DialogService.ShowAsync<AddShoppingListDialog>("Einkauf hinzufügen", parameters);
+        var result = await dialog.Result;
+    }
+
+    private async Task OpenShoppingListCatalogDeleteDialog()
+    {
+        var parameters = new DialogParameters { ["ShoppingListCatalogToDelete"] = shoppingListCatalog };
+        var dialog = await DialogService.ShowAsync<DeleteShoppingListCatalogDialog>
+            ("Einkaufkatalog entfernen", parameters);
+        var result = await dialog.Result;
+    }
+
+    private async Task OpenShoppingListCatalogEditDialog()
+    {
+        var parameters = new DialogParameters { ["ShoppingListCatalogToEdit"] = shoppingListCatalog, ["ShoppingListCatalogToEdit"] = shoppingListCatalog! };
+        var dialog = await DialogService.ShowAsync<EditShoppingListCatalogDialog>
+            ("Monatskatalog bearbeiten", parameters);
+        var result = await dialog.Result;
+    }
+
+
+
+    public List<ChartSeries>
+        Series = new List<ChartSeries>
+            ();
+    private readonly ChartOptions options = new();
+    public string[]? XAxisLabels;
+}

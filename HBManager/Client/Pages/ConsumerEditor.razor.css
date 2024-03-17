@@ -1,0 +1,36 @@
+﻿::deep .mud-chart-legend {
+    display: grid !important;
+    padding: 0px 0px !important;
+}
+
+::deep .mud-table-products {
+    background-color: var(--mud-palette-background-grey) !important;
+}
+
+::deep .mud-table-container {
+    min-height: 670px;
+}
+
+::deep .mud-table-cell {
+    background-color: var(--mud-palette-background-grey) !important;
+}
+
+::deep .mud-table-toolbar {
+    height: auto;
+}
+
+::deep .skeletons {
+    background-color: rgba(72 72 72, 0.65) !important;
+}
+
+.table-no-records-content {
+    background-color: var(--mud-palette-background-grey) !important;
+    margin-top: -12px !important;
+    margin-bottom: -12px !important;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+.editor-container {
+    width: 97.5%;
+}

@@ -1,0 +1,254 @@
+﻿@page "/product-search"
+@using Microsoft.AspNetCore.WebUtilities
+@inject IShoppingListService ShoppingListService
+@inject NavigationManager NavigationManager
+@attribute [Authorize]
+
+<PageTitle>Produktsuche</PageTitle>
+
+@if (isLoadingData)
+{
+    <div>
+        <MudContainer Class="mt-0 mb-5 px-0" MaxWidth="MaxWidth.Large">
+            <MudItem xs="12" sm="12" md="12">
+                <MudPaper Elevation="2" Class="px-4 py-4">
+                    <MudSkeleton Width="100%" Height="56px" Animation="Animation.Wave" SkeletonType="SkeletonType.Rectangle" Style="margin-top: 12px" Class="skeletons" />
+
+                    <div class="mx-5 mt-5">
+                        <MudSkeleton Width="100%" Height="235px" Animation="Animation.Wave" SkeletonType="SkeletonType.Rectangle" Style="margin-top: 12px" Class="skeletons mb-5" />
+                        <MudSkeleton Width="100%" Height="235px" Animation="Animation.Wave" SkeletonType="SkeletonType.Rectangle" Style="margin-top: 12px" Class="skeletons mb-5" />
+                    </div>
+
+
+                </MudPaper>
+            </MudItem>
+        </MudContainer>
+    </div>
+}
+else
+{
+    <div>
+        <MudContainer Class="mt-0 mb-5 px-0" MaxWidth="MaxWidth.Large">
+            <MudItem xs="12" sm="12" md="12">
+                <MudPaper Elevation="2" Class="px-4 py-4">
+                    <MudInputControl>
+                        <InputContent>
+                            <MudTextField T="string" @bind-Value="searchString" Immediate="true"
+                                      Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Primary"
+                                      Variant="Variant.Filled" Disabled="@isSearching"
+                                      Label="Produkte durchsuchen" MaxLength="25"
+                                      @onfocus="@ProductTitleFocus" @onblur="@ProductTitleBlur" OnAdornmentClick="Search">
+                            </MudTextField>
+                            <MudPopover Open="@showProductTitlePopOver" MaxHeight="300" AnchorOrigin="Origin.BottomLeft" RelativeWidth="true">
+                                <MudList Clickable="true">
+
+                                    @if (!string.IsNullOrEmpty(searchString))
+                                    {
+                                        <MudListItem onmousedown="@(() => ProductTitlePopOverMenuItemClick(searchString))">
+                                            <div class="d-flex justify-content-between">
+                                                @searchString
+                                                <MudText Color="Color.Tertiary">Übernehmen</MudText>
+                                            </div>
+                                        </MudListItem>
+                                        <MudDivider></MudDivider>
+                                    }
+                                    @foreach (var productTitle in GetFilteredMostUsedProductTitles())
+                                    {
+                                        <MudListItem @onmousedown="@(() => ProductTitlePopOverMenuItemClick(productTitle))" OnClickHandlerPreventDefault="true">
+                                            <div class="d-flex justify-content-between">
+                                                @productTitle
+                                                <MudText Color="Color.Info">Vorschlag</MudText>
+                                            </div>
+                                        </MudListItem>
+                                    }
+                                </MudList>
+                            </MudPopover>
+
+                        </InputContent>
+                    </MudInputControl>
+
+                    <div class="mx-5 mt-5">
+
+                        @if (isSearching)
+                        {
+                            <div class="py-5">
+                                <MudText Align="Align.Center">Suche Produkte</MudText>
+                                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+                            </div>
+                        }
+                        else
+                        {
+                            @if (productSearchDTOs.Any())
+                            {
+                                foreach (var productSearch in productSearchDTOs)
+                                {
+                                    string urlSL = $"shoppinglists/id/{productSearch.ShoppingListID}";
+                                    string urlSLProduct = $"shoppinglists/id/{productSearch.ShoppingListID}?search={productSearch.Title}";
+                                    string urlRetailer = $"retailers/id/{productSearch.Retailer!.ID}";
+                                    int shoppingListID = productSearch.ShoppingListID;
+                                    <MudPaper Elevation="4" Class="search-result-item-conainer mb-5" onclick="@(() => SearchSuggestionClick(shoppingListID))">
+                                        <div class="search-result-item-content mx-3">
+                                            <div class="d-flex justify-content-between">
+                                                <MudText Typo="Typo.h4" Class="my-3">@productSearch.Title</MudText>
+                                                <MudLink Typo="Typo.h6" Href="@urlSLProduct" Class="my-3">#@productSearch.ID</MudLink>
+                                            </div>
+                                            <div class="d-flex flex-column h-100">
+                                                <div>
+                                                    <MudText Typo="Typo.body1" Class="mb-1">Einkauf <MudLink Typo="Typo.body1" Href="@urlSL">#@productSearch.ShoppingListID</MudLink> vom @productSearch.DateOfShopping.ToShortDateString() bei <MudLink Typo="Typo.body1" Href="@urlRetailer">@productSearch.Retailer!.Name</MudLink></MudText>
+                                                    <div class="d-flex">
+                                                        <MudText Typo="Typo.body1" Class="mb-3">
+                                                            Kategorie: @productSearch.ProductType!.Name | Anzahl: @productSearch.Quantity | Verbraucher:
+                                                        </MudText>
+                                                        <MudAvatarGroup Max="3" Spacing="2" MaxColor="Color.Dark" MaxSize="Size.Small" OutlineColor="Color.Surface" Class="ms-2">
+                                                            @foreach (var consumer in productSearch.Consumers)
+                                                            {
+                                                                var backgroundColor = ConsumerColor.Palette.ElementAt(consumer.ColorIndex);
+                                                                var colorCSS = consumer.ColorIndex >= 7 && consumer.ColorIndex <= 8 ? ";color: #2e2d2dff" : null;
+                                                                <MudAvatar Size="Size.Small" Style="@($"background-color: { backgroundColor } {colorCSS}")">
+                                                                    @consumer.Name.Substring(0, 2).ToUpper()
+                                                                </MudAvatar>
+                                                            }
+                                                        </MudAvatarGroup>
+                                                    </div>
+
+
+                                                </div>
+                                                <div class="h-100 d-flex flex-column">
+                                                    <div class="mt-auto mb-3">
+                                                        <MudDivider Class="mb-3"></MudDivider>
+                                                        <MudText Typo="Typo.h5">Preis: @productSearch.Price.ToString("0.00")€</MudText>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </MudPaper>
+                                }
+                            }
+                            else
+                            {
+                                <div class="py-5">
+                                    <MudText Align="Align.Center">@searchMessage</MudText>
+                                </div>
+                            }
+                        }
+
+
+                    </div>
+
+                </MudPaper>
+            </MudItem>
+
+
+        </MudContainer>
+
+
+    </div>
+}
+
+@code {
+    private bool isLoadingData = true;
+    private bool isSearching = false;
+    private string? searchString = string.Empty;
+    private string searchMessage = "Gesuchte Produkte werden hier angezeigt.";
+
+    private List<ProductSearchDTO> productSearchDTOs = new List<ProductSearchDTO>();
+
+    #region Search AutoComplete
+
+        private List<string> mostUsedProductTitles = new List<string>();
+
+    private bool showProductTitlePopOver = false;
+
+    private void ProductTitleFocus()
+    {
+        showProductTitlePopOver = true;
+    }
+
+    private void ProductTitleBlur()
+    {
+        showProductTitlePopOver = false;
+    }
+
+    private IEnumerable<string> GetFilteredMostUsedProductTitles()
+    {
+        foreach (var title in mostUsedProductTitles)
+        {
+            yield return title;
+        }
+    }
+
+    private async Task ProductTitlePopOverMenuItemClick(string title)
+    {
+        searchString = title;
+        await Search();
+    }
+
+    #endregion
+
+    private async Task Search()
+    {
+        if (searchString is not null && searchString.Any())
+        {
+            if (!isSearching)
+            {
+                isSearching = true;
+                StateHasChanged();
+
+                var result = await ShoppingListService.GetProductSearchItemsAsync(searchString);
+                
+                productSearchDTOs = result.Data!;
+
+                if (productSearchDTOs.Any())
+                {
+                    searchMessage = string.Empty;
+                    productSearchDTOs = productSearchDTOs.OrderBy(x => x.Title).ThenBy(x => x.DateOfShopping).ToList();
+                }
+                else
+                {
+                    searchMessage = $"Keine Ergebnisse für '{searchString}' gefunden.";
+                }
+
+                NavigationManager.NavigateTo($"/product-search?q={searchString}");
+
+                isSearching = false;
+                StateHasChanged();
+            }
+        }
+
+    }
+
+    private void SearchSuggestionClick(int shoppingListID)
+    {
+        //NavigationManager.NavigateTo($"/shoppinglists/id/{shoppingListID}");
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoadingData = true;
+
+        isLoadingData = false;
+
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("q", out var query))
+        {
+            string queryString = query.ToString();
+
+            if (queryString is not null && queryString.Any())
+            {
+                searchString = queryString.Substring(0, Math.Min(queryString.Length, 25));
+
+                if (searchString is not null && searchString.Any())
+                {
+                    await Search();
+                }
+            }
+
+
+        }
+
+
+    }
+
+}

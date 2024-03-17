@@ -1,0 +1,49 @@
+﻿@inject IDialogService DialogService
+@inject IShoppingListService ShoppingListService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+@namespace HBManager.Client
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="me-5">
+            <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Class="mr-3 mb-n1" />
+            Einkauf entfernen?
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body1">Einkauf vom <strong>@ShoppingListToDelete.Date.ToString("MMMM")</strong>
+            @(ShoppingListToDelete.Products.Count() > 0 ? $"samt {ShoppingListToDelete.Products.Count()} Produkt(e)" : null) entfernen?
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Error" OnClick="Delete">Einkauf entfernen</MudButton>
+        <MudButton OnClick="Close">Abbrechen</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter]
+    public required MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public required ShoppingList ShoppingListToDelete { get; set; }
+
+    private void Close() => MudDialog.Cancel();
+
+    private async Task Delete()
+    {
+        var result = await ShoppingListService.DeleteShoppingList(ShoppingListToDelete.ID);
+
+        if (!result.Success)
+        {
+            Snackbar.Add($"{result.Message}", Severity.Error);
+            return;
+        }
+
+        Snackbar.Add($"Einkauf entfernt", Severity.Info);
+        MudDialog!.Close(DialogResult.Ok(true));
+        NavigationManager.NavigateTo($"shoppinglists/{ShoppingListToDelete.Date.Year}/{ShoppingListToDelete.Date.Month}");
+    }
+}
+
+

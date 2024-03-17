@@ -1,0 +1,407 @@
+﻿@page "/shoppinglists/id/{shoppingListID:int}"
+@using Microsoft.AspNetCore.WebUtilities
+@inject IShoppingListService ShoppingListService
+@inject IConsumerService ConsumerService
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+@attribute [Authorize]
+
+<PageTitle>Einkauf bearbeiten</PageTitle>
+
+@if (isLoadingData)
+{
+    <div>
+        <MudContainer Class="mt-0 mb-5 px-0" Style="padding-top: 56px" MaxWidth="MaxWidth.Large">
+            <MudGrid>
+                <MudItem xs="12" sm="12" md="8">
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="12">
+                            <MudPaper Elevation="2" Class="pa-4">
+                                <MudSkeleton Width="30%" Height="45px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" />
+                                <MudDivider Class="mb-2" />
+                                <MudSkeleton Width="10%" Height="30px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" />
+                                <MudSkeleton Width="15%" Height="30px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" />
+                            </MudPaper>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="12" md="12">
+                            <MudPaper Elevation="2" Class="pa-4">
+                                <MudSkeleton Width="30%" Height="40px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons mb-3" />
+                                <div class="d-flex flex-row mb-5">
+                                    <MudSkeleton Width="25%" Height="36px" Animation="Animation.Wave" SkeletonType="SkeletonType.Rectangle" Class="skeletons me-4" />
+                                    <MudSkeleton Width="35%" Height="36px" Animation="Animation.Wave" SkeletonType="SkeletonType.Rectangle" Class="skeletons" />
+                                </div>
+
+                                <MudSkeleton Width="30%" Height="40px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons mb-3" />
+
+                                <MudGrid Spacing="0">
+                                    <MudItem xs="12" sm="12" md="5">
+                                        <MudSkeleton Width="60%" Height="40px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons mb-3" />
+
+                                    </MudItem>
+                                    <MudItem xs="12" sm="12" md="7">
+                                        <MudSkeleton Width="60%" Height="36px" Animation="Animation.Wave" SkeletonType="SkeletonType.Rectangle" Class="skeletons" />
+                                    </MudItem>
+                                </MudGrid>
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+
+                <MudItem xs="12" sm="12" md="4">
+                    <MudPaper Elevation="2" Class="pa-4 d-flex flex-column" Style="aspect-ratio: 1;">
+                        <div class="align-self-center" style="width: 80%; height: 80%">
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="height: 100%; width: 100%" />
+                        </div>
+                        <div class="d-flex justify-content-center flex-row mt-3">
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="width: 20px; height: 20px; margin-right: 5px" />
+                            <MudSkeleton Width="25%" Height="20px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" Style="margin-right: 15px" />
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="width: 20px; height: 20px; margin-right: 5px" />
+                            <MudSkeleton Width="20%" Height="20px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" Style="margin-right: 15px" />
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="width: 20px; height: 20px; margin-right: 5px" />
+                            <MudSkeleton Width="16%" Height="20px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" Style="margin-right: 15px" />
+                        </div>
+                        <div class="d-flex justify-content-center flex-row mt-3">
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="width: 20px; height: 20px; margin-right: 5px" />
+                            <MudSkeleton Width="21%" Height="20px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" Style="margin-right: 15px" />
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="width: 20px; height: 20px; margin-right: 5px" />
+                            <MudSkeleton Width="24%" Height="20px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" Style="margin-right: 15px" />
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Style="width: 20px; height: 20px; margin-right: 5px" />
+                            <MudSkeleton Width="12%" Height="20px" Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Class="skeletons" Style="margin-right: 15px" />
+                        </div>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </div>
+}
+else
+{
+    @if (shoppingList is null)
+    {
+        <div class="d-flex justify-center" style="height: 60vh">
+            <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="0">
+                <h4 role="alert" class="text-center">@message</h4>
+                <MudButton Href="shoppinglists" Variant="Variant.Filled" Color="Color.Primary" Style="color: var(--mud-palette-tertiary-text);">Zurück zur Übersicht</MudButton>
+            </MudStack>
+        </div>
+    }
+    else
+    {
+        <div>
+            <MudContainer Class="mt-0 mb-5 px-0" MaxWidth="MaxWidth.Large">
+                <MudBreadcrumbs Items="breadCrumbItems"></MudBreadcrumbs>
+                <MudGrid>
+                    <MudItem xs="12" sm="12" md="8">
+                        <MudGrid>
+                            <MudItem xs="12" sm="12" md="12">
+                                <MudPaper Elevation="2" Class="pa-4">
+                                    <MudText Typo="Typo.h4">@shoppingList.Date.ToString("dd MMMM yyyy") (@shoppingList.Date.ToString("ddd"))</MudText>
+                                    <MudDivider Class="mb-2" />
+                                    <MudText Typo="Typo.h6">Einkauf bei: @shoppingList.Retailer!.Name</MudText>
+                                    <MudText Typo="Typo.h6">Ø-Produktpreis: @(averagePrice.ToString("0.00"))€</MudText>
+                                    <MudText Typo="Typo.h6">Gesamtkosten: @shoppingList.Products.Sum(x => x.Price * x.Quantity).ToString("0.00")€</MudText>
+                                    @*<MudNumericField @bind-Value="budget" Label="Budget" Variant="Variant.Text" Min="1" Max="5000" Style="width: 25%;" />*@
+                                </MudPaper>
+                            </MudItem>
+
+                            <MudItem xs="12" sm="12" md="12">
+                                <MudPaper Elevation="2" Class="pa-4">
+                                    <MudText Typo="Typo.h6" Class="mb-3">Optionen für diesen Einkauf</MudText>
+                                    <div class="d-flex gap-3 mb-6">
+
+                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Settings" Style="color: var(--mud-palette-tertiary-text);" Color="Color.Primary" OnClick="OpenShoppingListEditDialog">Einkauf bearbeiten</MudButton>
+
+                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="OpenShoppingListDeleteDialog">Gesamten Einkauf löschen</MudButton>
+                                    </div>
+
+
+                                    <MudText Typo="Typo.h6" Class="mb-3">Optionen für Produkte</MudText>
+
+                                    <MudTooltip Text="Noch nicht implemenetiert" Arrow="true">
+                                        <MudGrid Spacing="0">
+                                            <MudItem xs="12" sm="12" md="5">
+                                                <MudSwitch Checked="false" Label="Produkt Multi-Selektierung" Disabled="true" Color="Color.Primary" />
+
+                                            </MudItem>
+                                            <MudItem xs="12" sm="12" md="7">
+                                                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error" Disabled="true">Ausgewählte Produkte löschen</MudButton>
+                                                @*                                               Disabled="@(!(useTableMultiSelect) || selectedItems.Count <= 0)">
+                                        @(useTableMultiSelect && selectedItems.Count > 0 ? $"({selectedItems.Count})" : "") Ausgewählte Produkte löschen*@
+                                            </MudItem>
+                                        </MudGrid>
+                                    </MudTooltip>
+
+                                </MudPaper>
+                            </MudItem>
+
+                        </MudGrid>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="12" md="4">
+                        <MudPaper Elevation="2" Class="pa-4">
+                            <MudChart ChartType="ChartType.Pie" InputData="@chartData" InputLabels="@chartLabels" ChartOptions="chartOptions" />
+                        </MudPaper>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="12" md="12">
+                        <MudPaper Elevation="2" Class="pa-4">
+
+                            <div class="mx-auto editor-container">
+
+                                <MudText Typo="Typo.h4" Class="mb-4">Produkte hinzufügen/editieren</MudText>
+                                <MudTable Class="mx-auto mud-table-products"
+                                  Items="@shoppingList.Products" Hover="true" Bordered="false" Striped="false" ReadOnly="false"
+                                  Filter="new Func<Product, bool>(FilterTableUI)" Virtualize="false" Breakpoint="Breakpoint.Sm"
+                                  EditButtonPosition="TableEditButtonPosition.End" EditTrigger="TableEditTrigger.EditButton"
+                                  FixedHeader="false" FixedFooter="false">
+                                    <ToolBarContent>
+                                        <MudGrid Spacing="0">
+                                            <MudItem xs="12" sm="12" md="5" Class="mt-4">
+                                                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddShoppingCart" Color="Color.Tertiary" OnClick="OpenProductAddDialog">Produkt hinzufügen</MudButton>
+                                            </MudItem>
+                                            <MudItem xs="12" sm="12" md="7">
+                                                <MudTextField @bind-Value="searchString" Placeholder="Suche" Immediate="true" DebounceInterval="300" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                                            </MudItem>
+                                        </MudGrid>
+                                    </ToolBarContent>
+                                    <HeaderContent>
+                                        <MudTh>
+                                            <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<Product, object>(x=>x.ID)">#</MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh>
+                                            <MudTableSortLabel SortBy="new Func<Product, object>(x=>x.Title)">Bezeichnung</MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh>
+                                            <MudTableSortLabel SortBy="new Func<Product, object>(x=>x.ProductType!.Name)">Produkttyp</MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh>
+                                            <MudTableSortLabel SortBy="new Func<Product, object>(x => string.Join(',', x.Consumers.OrderBy(c => c.ID).Select(c => c.ID)))">Verbraucher</MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh>
+                                            <MudTableSortLabel SortBy="new Func<Product, object>(x=>x.Price * x.Quantity)">Preis</MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh>
+                                            <MudTableSortLabel SortBy="new Func<Product, object>(x=>x.Quantity)">Anzahl</MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh />
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd DataLabel="ID">@context.ID</MudTd>
+                                        <MudTd DataLabel="Bezeichnung">@context.Title</MudTd>
+                                        <MudTd DataLabel="Produkttyp">@context.ProductType!.Name</MudTd>
+                                        <MudTd DataLabel="Verbraucher">
+                                            <MudAvatarGroup Max="3" Spacing="2" MaxColor="Color.Dark" MaxSize="Size.Small" OutlineColor="Color.Surface">
+                                                @foreach (var consumer in context.Consumers)
+                                                {
+                                                    var backgroundColor = ConsumerColor.Palette.ElementAt(consumer.ColorIndex);
+                                                    var colorCSS = consumer.ColorIndex >= 7 && consumer.ColorIndex <= 8 ? ";color: #2e2d2dff" : null;
+                                                    <MudAvatar Size="Size.Small" Style="@($"background-color: { backgroundColor } {colorCSS}")">
+                                                        @consumer.Name.Substring(0, 2).ToUpper()
+                                                    </MudAvatar>
+                                                }
+                                            </MudAvatarGroup>
+                                        </MudTd>
+                                        <MudTd DataLabel="Preis">@context.Price.ToString("0.00")€</MudTd>
+                                        <MudTd DataLabel="Anzahl">@context.Quantity</MudTd>
+                                        <MudTd DataLabel="">
+                                            <div Class="d-flex justify-end me-3 gap-3">
+                                                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" Class="pa-0 align-self-end" OnClick="@(e => OpenProductEditDialog(context))" />
+                                                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" Class="pa-0 align-self-end" OnClick="@(e => OpenProductDeleteDialog(context))" />
+                                            </div>
+                                        </MudTd>
+                                    </RowTemplate>
+                                    <EditButtonContent Context="button">
+                                        <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" Class="pa-0" />
+                                    </EditButtonContent>
+                                    <NoRecordsContent>
+                                        <div class="table-no-records-content">
+                                            <MudText Typo="Typo.h6">Keine Produkte vorhanden</MudText>
+                                        </div>
+                                    </NoRecordsContent>
+                                    <PagerContent>
+                                        <MudTablePager PageSizeOptions="new int[]{10, 50, 100}" RowsPerPageString="Produkte pro Seite" />
+                                    </PagerContent>
+                                </MudTable>
+                            </div>
+
+
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+
+            </MudContainer>
+        </div>
+    }
+}
+
+
+
+@code {
+    private bool isLoadingData;
+    private bool firstSet = true;
+    private string message = string.Empty;
+    private double averagePrice = 0;
+
+    private ShoppingList? shoppingList;
+
+    [Parameter]
+    public int ShoppingListID { get; set; }
+
+    private string? searchString = "";
+
+    private List<BreadcrumbItem>? breadCrumbItems;
+
+    private string[]? chartLabels;
+    private double[]? chartData;
+    private ChartOptions chartOptions = new ChartOptions();
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!firstSet)
+        {
+            return;
+        }
+
+        firstSet = false;
+
+        isLoadingData = true;
+        var result = await ShoppingListService.GetShoppingListByIDAsync(ShoppingListID);
+
+        if (!result.Success)
+        {
+            message = result.Message;
+        }
+        else
+        {
+            shoppingList = result.Data;
+
+            UpdateChart();
+
+            breadCrumbItems = new List<BreadcrumbItem>
+            {
+                new BreadcrumbItem("Übersicht", href: $"shoppinglists?year={shoppingList!.Date.Year}"),
+                new BreadcrumbItem("Monatskatalog", href: $"shoppinglists/{shoppingList!.Date.Year}/{shoppingList!.Date.Month}"),
+                new BreadcrumbItem("Einkauf", href: null, disabled: true)
+            };
+
+            var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+            if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("search", out var url))
+            {
+                searchString = url;
+            }
+        }
+        isLoadingData = false;
+    }
+
+    private void UpdateChart()
+    {
+        if (shoppingList!.Products.Any())
+        {
+
+            double totalCosts = (double)shoppingList.Products.Sum(x => x.Price * x.Quantity);
+            averagePrice = Math.Round((double)shoppingList.Products.Average(x => x.Price), 2);
+            var productsByConsumers = shoppingList.Products.GroupBy(x => x.Consumers);
+
+            List<string> colors = new List<string>();
+            List<string> labels = new List<string>();
+            List<double> data = new List<double>();
+
+            var productyByConsumers = shoppingList.Products
+                .SelectMany(p => p.Consumers.DefaultIfEmpty(), (p, c) => new { Product = p, Consumer = c, Price = (p.Price * p.Quantity) / Math.Max(p.Consumers.Count, 1) })
+                .GroupBy(pc => pc.Consumer?.ID ?? 0)
+                .Select(g => new
+                {
+                    ConsumerID = g.Key,
+                    ConsumerName = g.FirstOrDefault()?.Consumer?.Name ?? "Unzugeordnet",
+                    ConsumerColorIndex = g.FirstOrDefault()?.Consumer?.ColorIndex ?? -1,
+                    PriceTotal = g.Sum(x => x.Price),
+                }).OrderBy(x => x.ConsumerID).ToList();
+
+            foreach (var productConsumerLink in productyByConsumers)
+            {
+                var percent = Math.Round(((double)productConsumerLink.PriceTotal / totalCosts) * 100);
+                labels.Add($"{productConsumerLink.ConsumerName} ({productConsumerLink.PriceTotal.ToString("0.00")}€ | {percent}%)");
+                data.Add(percent);
+                colors.Add(productConsumerLink.ConsumerColorIndex >= 0 ? ConsumerColor.Palette.ElementAt(productConsumerLink.ConsumerColorIndex) : "#1f1f1fff");
+            }
+
+            chartLabels = labels.ToArray();
+            chartData = data.ToArray();
+            chartOptions.ChartPalette = colors.ToArray();
+
+        }
+        else
+        {
+            chartLabels = new string[] { "Produkte hinzufügen für Statistiken" };
+            chartData = new double[] { 100 };
+            chartOptions.ChartPalette = new string[] { "#CCCCCCFF" };
+        }
+    }
+
+    private async Task OpenProductEditDialog(Product productToEdit)
+    {
+        var parameters = new DialogParameters { ["LocalProducts"] = shoppingList!.Products, ["ProductToEdit"] = productToEdit };
+        var dialog = await DialogService.ShowAsync<EditProductDialog>("Produkt editieren", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            UpdateChart();
+        }
+    }
+
+    private async Task OpenProductAddDialog()
+    {
+        var parameters = new DialogParameters { ["LocalProducts"] = shoppingList!.Products, ["ShoppingListID"] = shoppingList!.ID };
+        var dialog = await DialogService.ShowAsync<AddProductDialog>("Produkt hinzufügen", parameters);
+        var result = await dialog.Result;
+
+        UpdateChart();
+    }
+
+    private async Task OpenProductDeleteDialog(Product productToDelete)
+    {
+        var parameters = new DialogParameters { ["LocalProducts"] = shoppingList!.Products, ["ProductToDelete"] = productToDelete };
+        var dialog = await DialogService.ShowAsync<DeleteProductDialog>("Produkt entfernen", parameters);
+        var result = await dialog.Result;
+
+        UpdateChart();
+    }
+
+    private async Task OpenShoppingListDeleteDialog()
+    {
+        var parameters = new DialogParameters { ["ShoppingListToDelete"] = shoppingList! };
+        var dialog = await DialogService.ShowAsync<DeleteShoppingListDialog>("Einkauf entfernen", parameters);
+        var result = await dialog.Result;
+    }
+
+    private async Task OpenShoppingListEditDialog()
+    {
+        var parameters = new DialogParameters { ["ShoppingListToEdit"] = shoppingList! };
+        var dialog = await DialogService.ShowAsync<EditShoppingListDialog>("Einkauf bearbeiten", parameters);
+        var result = await dialog.Result;
+    }
+
+
+
+    private bool FilterTableUI(Product product) => FilterTable(product, searchString!);
+    private bool FilterTable(Product product, string searchStringTable)
+    {
+        if (string.IsNullOrWhiteSpace(searchStringTable))
+            return true;
+        if (product.Title.Contains(searchStringTable, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (product.ProductType!.Name.Contains(searchStringTable, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (product.Consumers.Any(x => x.Name.Contains(searchStringTable, StringComparison.OrdinalIgnoreCase)))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+}

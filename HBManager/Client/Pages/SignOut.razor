@@ -1,0 +1,21 @@
+﻿@page "/sign-out"
+@inject ILocalStorageService LocalStorage
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ISnackbar Snackbar
+
+@if (true)
+{
+
+}
+
+@code
+{
+    protected override async Task OnInitializedAsync()
+    {
+        await LocalStorage.RemoveItemAsync("authToken");
+        await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        NavigationManager.NavigateTo("/", true);
+        Snackbar.Add("Erfolgreich abgemeldet", Severity.Info);
+    }
+}

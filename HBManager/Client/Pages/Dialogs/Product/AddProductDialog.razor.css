@@ -1,0 +1,8 @@
+﻿.mud-list-item-suggestion:nth-child(odd) {
+    background-color: var(--mud-palette-background-grey) !important;
+}
+
+.mud-list-item-suggestion:nth-child(even) {
+    background-color: var(--mud-palette-dark-darken) !important;
+}
+

@@ -1,0 +1,110 @@
+﻿@inject IDialogService DialogService
+@inject IShoppingListService ShoppingListService
+@inject IRetailerService RetailerService
+@inject ISnackbar Snackbar
+@namespace HBManager.Client
+
+<div>
+
+
+    <MudDialog>
+
+        <TitleContent>
+            <MudText Typo="Typo.h6" Class="me-5">
+                <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3 mb-n1" />
+                Einkauf hinzufügen
+            </MudText>
+        </TitleContent>
+        <DialogContent>
+            @if (loading)
+            {
+                <MudStack AlignItems="AlignItems.Center" Class="py-5">
+                    <MudProgressCircular Color="Color.Info" Indeterminate="true" Size="Size.Large" />
+                    <MudText>Lade Daten</MudText>
+                </MudStack>
+            }
+            else
+            {
+                <EditForm Model="@shoppingListDTO" OnValidSubmit="OnValidSubmit">
+                    <DataAnnotationsValidator />
+
+                    <MudDatePicker Label="Datum des Einkaufes" HelperText="@pickedDate?.ToShortDateString()"
+                               @bind-Date="pickedDate" FixYear="@LocalShoppingListCatalog.Date.Year" FixMonth="@LocalShoppingListCatalog.Date.Month"
+                               DateFormat="dd" Color="Color.Info" Class="mb-5" Variant="Variant.Filled" />
+
+                    <MudSelect T="int" Label="Händler" @bind-Value="shoppingListDTO.RetailerID"
+                           Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Store" AdornmentColor="Color.Default"
+                           AnchorOrigin="Origin.BottomCenter" Class="mb-5" Variant="Variant.Filled">
+                        @foreach (var retailer in RetailerService.Retailers)
+                        {
+                            <MudSelectItem Value="retailer.ID">@retailer.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+
+
+
+                    <div class="px-1 py-2 d-flex justify-content-end">
+                        <MudButton Color="Color.Tertiary" ButtonType="ButtonType.Submit">Einkauf hinzufügen</MudButton>
+                        <MudButton OnClick="Close" Class="ms-1">Schließen</MudButton>
+                    </div>
+                </EditForm>
+            }
+        </DialogContent>
+    </MudDialog>
+</div>
+@code {
+    [CascadingParameter]
+    public required MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public required ShoppingListCatalog LocalShoppingListCatalog { get; set; }
+
+    private ShoppingListAddDTO shoppingListDTO = new ShoppingListAddDTO();
+    private DateTime? pickedDate;
+    private bool loading;
+    private bool processing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        loading = true;
+        await RetailerService.GetRetailersAsync();
+
+        shoppingListDTO.ShoppingListCatalogID = LocalShoppingListCatalog.ID;
+        shoppingListDTO.RetailerID = 2;
+        pickedDate = LocalShoppingListCatalog.Date;
+
+        loading = false;
+    }
+
+
+    private void Close() => MudDialog?.Cancel();
+    private async Task OnValidSubmit(EditContext context)
+    {
+        if (processing)
+        {
+            return;
+        }
+
+        processing = true;
+
+        shoppingListDTO.Date = new DateTime(pickedDate!.Value.Year, pickedDate.Value.Month, pickedDate.Value.Day);
+
+        var result = await ShoppingListService.AddShoppingList(shoppingListDTO);
+
+        if (!result.Success)
+        {
+            Snackbar.Add($"{result.Message}", Severity.Error);
+            processing = false;
+            return;
+        }
+
+        var newShoppingList = result.Data!;
+
+        LocalShoppingListCatalog.ShoppingLists.Add(newShoppingList);
+        LocalShoppingListCatalog.ShoppingLists = LocalShoppingListCatalog.ShoppingLists.OrderBy(x => x.Date.Day).ToList();
+
+        Snackbar.Add("Einkauf hinzugefügt", Severity.Success);
+        MudDialog!.Close(DialogResult.Ok(true));
+        processing = false;
+    }
+}

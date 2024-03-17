@@ -1,0 +1,61 @@
+::deep a:hover {
+    color: var(--mud-palette-primary);
+}
+
+::deep .mud-drawer {
+    background-color: var(--mud-palette-surface);
+}
+
+    ::deep .mud-drawer::-webkit-scrollbar {
+        display: none;
+    }
+
+/* Hide scrollbar for IE, Edge and Firefox */
+::deep .mud-drawer {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+::deep .mud-appbar {
+    height: 64px !important;
+}
+
+::deep .mud-toolbar-appbar {
+    height: 64px !important;
+}
+
+::deep .mud-appbar-text {
+    background: linear-gradient(65deg, #0d6efd 0%, #4dc3ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+::deep .mud-main-content {
+    min-height: 100vh;
+    padding-top: calc(var(--mud-appbar-height) + 2rem);
+    padding-bottom: 2rem;
+    padding-right: 1rem;
+    padding-left: 1rem;
+}
+
+::deep .mud-menu-profile-btn {
+    background-color: var(--mud-palette-primary-text);
+    border-radius: 50%;
+}
+
+::deep .mud-menu-profile-btn {
+    color: var(--mud-palette-text-secondary);
+    border-radius: 50%;
+}
+
+    ::deep .mud-menu-profile-btn :hover {
+        color: var(--mud-palette-text-primary);
+    }
+
+
+::deep .mud-menu-darkmode-btn {
+    background-color: var(--mud-palette-primary-text) !important;
+}
+
+

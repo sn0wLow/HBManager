@@ -1,0 +1,90 @@
+﻿@page "/login"
+@inject IAuthService AuthService
+@inject ILocalStorageService LocalStorage
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Anmelden</PageTitle>
+
+<div class="login-container">
+    <EditForm Model="@user" OnValidSubmit="OnValidSubmit" class="align-items-center my-auto">
+        <DataAnnotationsValidator />
+        <MudGrid>
+
+
+            <MudItem xs="12" sm="8" md="6" Class="mx-auto" Style="max-width: 40rem">
+
+                <MudCard Class="login-header">
+                    <MudCardContent>
+
+                        @if (!success)
+                        {
+                            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mb-5">@errorMessage</MudAlert>
+                        }
+
+                        <MudTextField Label="Benutzername"
+                                      @bind-Value="user.Name" For="@(() => user.Name)" MaxLength="20" />
+                        <MudTextField Label="Passwort" Class="mt-3" MaxLength="100"
+                                      @bind-Value="user.Password" For="@(() => user.Password)" InputType="InputType.Password" />
+                    </MudCardContent>
+                    <MudCardActions>
+
+                        <MudButton ButtonType="ButtonType.Submit" Disabled="@processing" Variant="Variant.Filled" Color="Color.Primary" Class="login-button">
+                            @if (processing)
+                            {
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                <MudText Class="ms-2">Verarbeite</MudText>
+                            }
+                            else
+                            {
+                                <MudText>Login</MudText>
+                            }
+                        </MudButton>
+
+                    </MudCardActions>
+                </MudCard>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Surface" Href="/register" Class="btn-login-footer" StartIcon="@Icons.Material.Filled.Add">Stattdessen registieren</MudButton>
+            </MudItem>
+        </MudGrid>
+    </EditForm>
+</div>
+
+@code {
+    private UserLoginDTO user = new UserLoginDTO();
+    private string errorMessage = string.Empty;
+    private bool success = true;
+    private bool processing = false;
+
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        if (processing)
+        {
+            return;
+        }
+
+        processing = true;
+
+        var result = await AuthService.Login(user);
+
+        if (result.Success)
+        {
+            errorMessage = string.Empty;
+            success = true;
+
+            await LocalStorage.SetItemAsync("authToken", result.Data);
+            await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            NavigationManager.NavigateTo("", true);
+        }
+        else
+        {
+            errorMessage = result.Message;
+            success = false;
+        }
+
+        StateHasChanged();
+
+        processing = false;
+    }
+}

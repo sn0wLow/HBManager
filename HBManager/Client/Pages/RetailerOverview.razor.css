@@ -1,0 +1,46 @@
+﻿::deep .mud-chart-legend {
+    display: grid !important;
+    padding: 0px 0px !important;
+}
+
+::deep .retailer-card-conainer {
+    width: 400px;
+    height: 160px;
+    background-color: var(--mud-palette-background-grey) !important;
+    display: flex;
+    transition: transform 250ms;
+    cursor: pointer;
+    color: var(--mud-palette-text-secondary);
+}
+
+::deep .retailer-card-header-content {
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+    ::deep .retailer-card-header-content > * {
+        grid-row-start: 1;
+        grid-column-start: 1;
+    }
+
+::deep .retailer-card-conainer:hover {
+    transform: scale(1.1);
+    color: var(--mud-palette-text-primary);
+}
+
+::deep .retailer-card-conainer:hover {
+    transform: scale(1.1);
+    color: var(--mud-palette-text-primary);
+}
+
+.retailer-card-header {
+    aspect-ratio: 1;
+    display: flex;
+}
+
+.retailer-card-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0.5rem;
+}

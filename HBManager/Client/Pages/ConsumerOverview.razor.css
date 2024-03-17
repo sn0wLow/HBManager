@@ -1,0 +1,46 @@
+﻿::deep .mud-chart-legend {
+    display: grid !important;
+    padding: 0px 0px !important;
+}
+
+::deep .consumer-card-conainer {
+    width: 325px;
+    height: 100px;
+    background-color: var(--mud-palette-background-grey) !important;
+    display: flex;
+    transition: transform 250ms;
+    cursor: pointer;
+    color: var(--mud-palette-text-secondary);
+}
+
+::deep .consumer-card-header-content {
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+::deep .consumer-card-header-content > * {
+    grid-row-start: 1;
+    grid-column-start: 1;
+}
+
+::deep .consumer-card-conainer:hover {
+    transform: scale(1.1);
+    color: var(--mud-palette-text-primary);
+}
+
+    ::deep .consumer-card-conainer:hover {
+        transform: scale(1.1);
+        color: var(--mud-palette-text-primary);
+    }
+
+.consumer-card-header{
+    aspect-ratio: 1;
+    display: flex;
+}
+
+.consumer-card-content{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0.5rem;
+}

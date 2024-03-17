@@ -1,0 +1,31 @@
+﻿<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+
+                    <div class="d-flex flex-column h-100">
+                        <div class="d-flex flex-column my-auto mx-auto justify-content-center">
+                            <h4 role="alert">Die Seite ist nicht verfügbar.</h4>
+                            <MudFab Class="mb-5" Href="login" StartIcon="@Icons.Material.Filled.Login" aria-label="login" Style="color: var(--mud-palette-tertiary-text);" Color="Color.Primary" Label="Anmelden"></MudFab>
+                            <MudFab Href="register" StartIcon="@Icons.Material.Filled.Add" aria-label="register" Style="color: var(--mud-palette-tertiary-text);" Color="Color.Tertiary" Label="Registrieren"></MudFab>
+                        </div>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Die Seite konnte nicht gefunden werden</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <div class="d-flex justify-center" style="height: 60vh">
+                    <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="0">
+                        <h4 role="alert" class="text-center">Die Seite konnte nicht gefunden werden.</h4>
+                        <MudButton Href="/" Variant="Variant.Filled" Color="Color.Primary" Style="color: var(--mud-palette-tertiary-text);">Zurück zur Übersicht</MudButton>
+                    </MudStack>
+                </div>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
+

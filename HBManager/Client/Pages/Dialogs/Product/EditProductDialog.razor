@@ -1,0 +1,261 @@
+﻿@inject IDialogService DialogService
+@inject IShoppingListService ShoppingListService
+@inject IConsumerService ConsumerService
+@inject IProductTypeService ProductTypeService
+@inject ISnackbar Snackbar
+@namespace HBManager.Client
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="me-5">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-3 mb-n1" />
+            Produkt editieren
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (loading)
+        {
+            <MudStack AlignItems="AlignItems.Center" Class="py-5">
+                <MudProgressCircular Color="Color.Info" Indeterminate="true" Size="Size.Large" />
+                <MudText>Lade Daten</MudText>
+            </MudStack>
+        }
+        else
+        {
+            <EditForm Model="@productEditDTO" OnValidSubmit="OnValidSubmit">
+                <DataAnnotationsValidator />
+                <MudTextField T="string" Value="@productEditDTO.ID.ToString()" Label="Produktnummer" ReadOnly="true" Disabled="true" Required="true" Class="mb-5" />
+
+                <MudInputControl Class="mb-5">
+                    <InputContent>
+                        <MudTextField @ref="mudProductTitleTextField" T="string" @bind-Value="@productEditDTO.Title" DebounceInterval="500" Immediate="true"
+                                  Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Title" AdornmentColor="Color.Default"
+                                  For="@(() => productEditDTO.Title)" Mask="@(new RegexMask(@"(^\S{0,25}$)|(^\S[ \S]{0,23}\S?$)"))"
+                                  Label="Produkttitel" MaxLength="25" OnDebounceIntervalElapsed="@OnDebounceIntervalElapsed_ProductTitle"
+                                  @onfocusin="@ProductTitleOnFocusIn" @onblur="@DelayedProductTitleOnBlur" Variant="Variant.Filled" AutoFocus>
+                        </MudTextField>
+                        <MudPopover Open="@showProductTitlePopOver" MaxHeight="400" AnchorOrigin="Origin.BottomLeft" RelativeWidth="true">
+                            <MudList Clickable="true">
+
+                                @if (!string.IsNullOrEmpty(productEditDTO.Title))
+                                {
+                                    <MudListItem>
+                                        <div class="d-flex justify-content-between">
+                                            @productEditDTO.Title
+                                            <MudText Color="Color.Tertiary">Übernehmen</MudText>
+                                        </div>
+                                    </MudListItem>
+                                    <MudDivider></MudDivider>
+                                }
+
+                                @if(loadingMostUsedProductTitles)
+                                {
+                                    <MudStack AlignItems="AlignItems.Center" Class="py-5">
+                                        <MudProgressCircular Color="Color.Info" Indeterminate="true" Size="Size.Large" />
+                                        <MudText>Lade Vorschläge</MudText>
+                                    </MudStack>
+                                }
+                                else
+                                {
+                                    @foreach (var product in GetFilteredMostUsedProductTitles())
+                                    {
+                                        <MudListItem @onmousedown="@(() => ProductTitlePopOverMenuItemClick(product))" OnClickHandlerPreventDefault="true">
+                                            <div class="d-flex justify-content-between">
+                                                @product
+                                                <MudText Color="Color.Info">Vorschlag</MudText>
+                                            </div>
+
+
+                                        </MudListItem>
+                                    }
+                                }
+
+                            </MudList>
+                        </MudPopover>
+
+                    </InputContent>
+                </MudInputControl>
+
+                <MudNumericField T="decimal" @bind-Value="@productEditDTO.Price" For="@(() => productEditDTO.Price)"
+                             Min="0.01m" Max="5000" Step="0.01m" Label="Preis"
+                             Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.EuroSymbol" AdornmentColor="Color.Success"
+                             Class="mb-5" Variant="Variant.Filled" />
+                <MudNumericField T="int" @bind-Value="@productEditDTO.Quantity" For="@(() => productEditDTO.Quantity)"
+                             Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Filter9Plus" AdornmentColor="Color.Default"
+                             Min="1" Max="20" Label="Anzahl" Class="mb-5" Variant="Variant.Filled" />
+
+                <MudSelect Label="Produktkategorie" T="int" @bind-Value="productEditDTO.ProductTypeID"
+                       Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Category" AdornmentColor="Color.Default"
+                       AnchorOrigin="Origin.BottomCenter" Class="mb-5" Variant="Variant.Filled">
+                    @foreach (var productType in ProductTypeService.ProductTypes)
+                    {
+                            <MudSelectItem Value="productType.ID">@productType.Name</MudSelectItem>
+                    }
+                </MudSelect>
+
+                @if (!(hasAnyConsumers))
+                {
+                    <MudAlert Severity="Severity.Info" Class="mt-4 mb-3">Verbraucher hinzufügen um Produkte zuordnen zu können</MudAlert>
+                }
+
+                <MudSelect Label="Verbraucher" T="int" @bind-SelectedValues="selectedConsumerIDs" ToStringFunc="ConsumerNameConverter" MultiSelection="true"
+                       Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.SupervisedUserCircle" AdornmentColor="Color.Default"
+                       AnchorOrigin="Origin.BottomCenter" Class="mb-5" Disabled="@(!hasAnyConsumers)" Variant="Variant.Filled">
+                    @foreach (var consumer in ConsumerService.Consumers)
+                    {
+                        <MudSelectItem Value="consumer.ID">@consumer.Name</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <div class="px-1 py-2 d-flex justify-content-end">
+                    <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@processing">Produkt editieren</MudButton>
+                    <MudButton OnClick="Close" Class="ms-1">Schließen</MudButton>
+                </div>
+            </EditForm>
+        }
+    </DialogContent>
+</MudDialog>
+@code {
+    [CascadingParameter]
+    public required MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public required List<Product> LocalProducts { get; set; }
+    [Parameter]
+    public required Product ProductToEdit { get; set; }
+
+    private MudTextField<string>? mudProductTitleTextField;
+
+    private IEnumerable<int> selectedConsumerIDs { get; set; } = new HashSet<int>();
+
+    private ProductEditDTO productEditDTO = new ProductEditDTO();
+    private bool loading = true;
+    private bool processing = false;
+    private bool hasAnyConsumers = false;
+
+
+    private bool showProductTitlePopOver = false;
+
+    private List<string> mostUsedProductTitles = new List<string>();
+    private bool loadingMostUsedProductTitles = true;
+
+    private void ProductTitleOnFocusIn()
+    {
+        if (mostUsedProductTitles.Any())
+        {
+            showProductTitlePopOver = true;
+        }
+    }
+
+    private async Task DelayedProductTitleOnBlur()
+    {
+        await Task.Delay(100).ContinueWith(_ => ProductTitleOnBlur());
+    }
+
+    private void ProductTitleOnBlur()
+    {
+        showProductTitlePopOver = false;
+    }
+
+    private void ProductTitlePopOverMenuItemClick(string title)
+    {
+        productEditDTO.Title = title;
+        mudProductTitleTextField!.ResetValidation();
+        showProductTitlePopOver = false;
+    }
+
+    private string ConsumerNameConverter(int id)
+    {
+        return ConsumerService.Consumers.Find(x => x.ID == id)!.Name;
+    }
+
+    private IEnumerable<string> GetFilteredMostUsedProductTitles()
+    {
+        foreach (var title in mostUsedProductTitles)
+        {
+            yield return title;
+        }
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        loading = true;
+        await ConsumerService.GetConsumersAsync();
+        await ProductTypeService.GetProductTypesAsync();
+
+        hasAnyConsumers = ConsumerService.Consumers.Any();
+
+        productEditDTO.Title = ProductToEdit.Title;
+        productEditDTO.Price = ProductToEdit.Price;
+        productEditDTO.Quantity = ProductToEdit.Quantity;
+        productEditDTO.ID = ProductToEdit.ID;
+        productEditDTO.Note = ProductToEdit.Note;
+        productEditDTO.ProductTypeID = ProductToEdit.ProductTypeID;
+        selectedConsumerIDs = ProductToEdit.Consumers.Select(x => x.ID);
+
+        loading = false;
+    }
+
+    private void Close() => MudDialog?.Cancel();
+
+
+    private async void OnDebounceIntervalElapsed_ProductTitle(string value)
+    {
+        if (value.Length >= 2)
+        {
+            loadingMostUsedProductTitles = true;
+            showProductTitlePopOver = true;
+            var mostUsed = await ShoppingListService.GetMostUsedProductTitlesAsync(value);
+
+            if (mostUsed.Data is not null)
+            {
+                mostUsedProductTitles.Clear();
+                mostUsedProductTitles = mostUsed.Data;
+            }
+
+            loadingMostUsedProductTitles = false;
+        }
+        else
+        {
+            showProductTitlePopOver = false;
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        if (processing)
+        {
+            return;
+        }
+
+        processing = true;
+        productEditDTO.ConsumerIDs = selectedConsumerIDs.ToList();
+        var result = await ShoppingListService.EditProduct(productEditDTO);
+
+        if (!result.Success)
+        {
+            Snackbar.Add($"{result.Message}", Severity.Error);
+            processing = false;
+            return;
+        }
+
+        var editedProduct = result.Data!;
+
+        var localProductToEdit = LocalProducts.Find(x => x.ID == ProductToEdit.ID)!;
+
+        localProductToEdit.Price = editedProduct.Price;
+        localProductToEdit.Title = editedProduct.Title;
+        localProductToEdit.Note = editedProduct.Note;
+        localProductToEdit.Quantity = editedProduct.Quantity;
+
+        localProductToEdit.Consumers = editedProduct.Consumers;
+        localProductToEdit.ProductType = editedProduct.ProductType;
+
+        Snackbar.Add("Produkt editiert", Severity.Info);
+        MudDialog!.Close(DialogResult.Ok(true));
+        processing = false;
+    }
+}

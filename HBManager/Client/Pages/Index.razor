@@ -1,0 +1,42 @@
+﻿@page "/"
+@inject IAuthService AuthService
+<PageTitle>Home</PageTitle>
+
+
+@if (isLoading)
+{
+    <div class=" d-flex h-100">
+        <MudProgressCircular Color="Color.Default" Indeterminate="true" Size="Size.Large" Class="mx-auto my-auto" />
+    </div>
+}
+else
+{
+    @if (isAuthorized)
+    {
+        <ShoppingListCatalogOverview></ShoppingListCatalogOverview>
+    }
+    else
+    {
+        <Login></Login>
+    }
+}
+
+@code {
+    bool isLoading = true;
+    bool isAuthorized = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        isAuthorized = false;
+
+        isAuthorized = await AuthService.IsUserAuthenticated();
+
+        isLoading = false;
+    }
+}
+
+
+
+
+

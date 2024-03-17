@@ -1,0 +1,414 @@
+﻿@page "/shoppinglists"
+@using Microsoft.AspNetCore.WebUtilities
+@inject IShoppingListCatalogService ShoppingListCatalogService
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+@attribute [Authorize]
+
+<PageTitle>Jährliche Einkaufsübersicht</PageTitle>
+
+<div class="d-flex justify-content-center calendar-container">
+    <div class="d-flex justify-content-between calendar-year-nav mx-auto shadow">
+        <MudIconButton Variant="Variant.Filled" Class="year-nav-button"
+                       DisableElevation="true" Icon="@Icons.Material.Filled.ArrowBackIos" Size="Size.Medium"
+                       OnClick="DecrementYear" Disabled="@(loadingData || loadingDataNext || displayYear == 0)" />
+
+        <MudText Class="d-flex align-items-center fw-bold" Typo="Typo.h4">@displayYear</MudText>
+
+            <MudIconButton Variant="Variant.Filled" Class="year-nav-button"
+                           DisableElevation="true" Icon="@Icons.Material.Filled.ArrowForwardIos" Size="Size.Medium"
+                           OnClick="IncrementYear" Disabled="@(loadingData || loadingDataNext)" />
+        </div>
+
+
+
+        <div>
+            <MudCarousel @ref="carousel" Class="carousel-calendar" ShowArrows="false" ShowBullets="false" EnableSwipeGesture="false" AutoCycle="false" TData="object">
+                <MudCarouselItem Color="@Color.Transparent" Transition="Transition.Custom" CustomTransitionEnter="@firstItemEnterClass" CustomTransitionExit="@firstItemExitClass">
+                    <div class="month-picker-container mx-auto my-auto">
+
+                        @for (int i = 1; i < 13; i++)
+                    {
+                        var j = i;
+                        <div class="month-container" aria-label="@($"button-{IntToMonthString(i)}")" disabled="@(loadingData || loadingDataNext)"
+                             @onclick="@(() => @MonthContainer_Click(j))">
+
+                            <div class="month-header @(DateTime.Now.Month == i && DateTime.Now.Year == currentYear ? "current-date" : null)">
+                                <p>@IntToMonthString(i)</p>
+                            </div>
+
+                            @if (loadingData)
+                            {
+                                <div class="d-flex justify-content-between align-self-center flex-column mx-auto px-2 py-2" style="height: calc(100% - 2rem); width: 90%;">
+                                    <div class="d-flex justify-content-between">
+                                        <MudSkeleton Width="70%" Animation="Animation.Wave" Style="background-color: rgba(72 72 72, 0.65);" SkeletonType="SkeletonType.Text" />
+                                        <MudSkeleton Width="15%" Animation="Animation.Wave" Style="background-color: rgba(72 72 72, 0.65);" SkeletonType="SkeletonType.Text" />
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <MudSkeleton Width="65%" Animation="Animation.Wave" Style="background-color: rgba(72 72 72, 0.65);" SkeletonType="SkeletonType.Text" />
+                                        <MudSkeleton Width="15%" Animation="Animation.Wave" Style="background-color: rgba(72 72 72, 0.65);" SkeletonType="SkeletonType.Text" />
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <MudSkeleton Width="60%" Animation="Animation.Wave" Style="background-color: rgba(72 72 72, 0.65);" SkeletonType="SkeletonType.Text" />
+                                        <MudSkeleton Width="15%" Animation="Animation.Wave" Style="background-color: rgba(72 72 72, 0.65);" SkeletonType="SkeletonType.Text" />
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <MudSkeleton Width="55%" Animation="Animation.Wave" Style="background-color: rgba(72 72 72, 0.65);" SkeletonType="SkeletonType.Text" />
+                                        <MudSkeleton Width="15%" Animation="Animation.Wave" Style="background-color: rgba(72 72 72, 0.65);" SkeletonType="SkeletonType.Text" />
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                @if (shoppingListCatalogs.Find(x => x.Date.Month == i) is not null)
+                                {
+                                    decimal costs = Math.Ceiling(shoppingListCatalogs.Find(x => x.Date.Month == i)!.ShoppingLists.Sum(s => s.Products.Sum(p => p.Price * p.Quantity)));
+                                    <div class="month-content">
+                                        <div class="month-shoppinglist-entry">
+                                            <p>Einkäufe:</p>
+                                            <p>@(shoppingListCatalogs.Find(x => x.Date.Month == i)!.ShoppingLists.Count())</p>
+                                        </div>
+                                        <div class="month-shoppinglist-entry">
+                                            <p>Ausgaben:</p>
+                                            <p>@costs€</p>
+                                        </div>
+                                        <div class="month-shoppinglist-entry">
+                                            <p>Budget:</p>
+                                            <p>@((int)(shoppingListCatalogs.Find(x => x.Date.Month == i)!.Budget - costs))€</p>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="month-content-new">
+                                        <p>+</p>
+                                    </div>
+                                }
+                            }
+
+                        </div>
+                    }
+
+                </div>
+            </MudCarouselItem>
+            <MudCarouselItem Color="@Color.Transparent" Transition="Transition.Custom" CustomTransitionEnter="@secondItemEnterClass" CustomTransitionExit="@secondItemExitClass">
+                <div class="month-picker-container mx-auto my-auto">
+                    @for (int i = 1; i < 13; i++)
+                    {
+                        var j = i;
+                        <div class="month-container" aria-label="@($"button {IntToMonthString(i)}")" disabled="@(loadingData || loadingDataNext)"
+                             @onclick="@(() => @MonthContainerNext_Click(j))">
+                            <div class="month-header @(DateTime.Now.Month == i && DateTime.Now.Year == currentYearNext ? "current-date" : null)">
+                                <p>@IntToMonthString(i)</p>
+                            </div>
+
+                            @if (loadingDataNext)
+                            {
+                                <div class="d-flex justify-content-between align-self-center flex-column mx-auto px-2 py-2" style="height: calc(100% - 2rem); width: 90%;">
+                                    <div class="d-flex justify-content-between">
+                                        <MudSkeleton Width="70%" Animation="Animation.Wave" Style="background-color: rgba(72 72 72, 0.65);" SkeletonType="SkeletonType.Text" />
+                                        <MudSkeleton Width="15%" Animation="Animation.Wave" Style="background-color: rgba(72 72 72, 0.65);" SkeletonType="SkeletonType.Text" />
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <MudSkeleton Width="65%" Animation="Animation.Wave" Style="background-color: rgba(72 72 72, 0.65);" SkeletonType="SkeletonType.Text" />
+                                        <MudSkeleton Width="15%" Animation="Animation.Wave" Style="background-color: rgba(72 72 72, 0.65);" SkeletonType="SkeletonType.Text" />
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <MudSkeleton Width="60%" Animation="Animation.Wave" Style="background-color: rgba(72 72 72, 0.65);" SkeletonType="SkeletonType.Text" />
+                                        <MudSkeleton Width="15%" Animation="Animation.Wave" Style="background-color: rgba(72 72 72, 0.65);" SkeletonType="SkeletonType.Text" />
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <MudSkeleton Width="55%" Animation="Animation.Wave" Style="background-color: rgba(72 72 72, 0.65);" SkeletonType="SkeletonType.Text" />
+                                        <MudSkeleton Width="15%" Animation="Animation.Wave" Style="background-color: rgba(72 72 72, 0.65);" SkeletonType="SkeletonType.Text" />
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                @if (shoppingListCatalogsNext.Find(x => x.Date.Month == i) is not null)
+                                {
+                                    <div class="month-content">
+                                        <div class="month-shoppinglist-entry">
+                                            <p>Einkäufe:</p>
+                                            <p>@(shoppingListCatalogsNext.Find(x => x.Date.Month == i)!.ShoppingLists.Count())</p>
+                                        </div>
+                                        <div class="month-shoppinglist-entry">
+                                            <p>Ausgaben:</p>
+                                            <p>@(Math.Ceiling(shoppingListCatalogsNext.Find(x => x.Date.Month == i)!.ShoppingLists.Sum(s => s.Products.Sum(p => p.Price * p.Quantity))))€</p>
+                                        </div>
+                                        <div class="month-shoppinglist-entry">
+                                            <p>Budget:</p>
+                                            <p>@(shoppingListCatalogsNext.Find(x => x.Date.Month == i)!.Budget)€</p>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="month-content-new">
+                                        <p>+</p>
+                                    </div>
+                                }
+                            }
+
+                        </div>
+                    }
+                </div>
+            </MudCarouselItem>
+        </MudCarousel>
+
+    </div>
+
+</div>
+
+@code {
+    private bool loadingData = true;
+    private bool loadingDataNext = true;
+
+    private int currentYear = 2023;
+    private int currentYearNext = 2023;
+    private int displayYear = 2023;
+
+    private MudCarousel<object>? carousel { get; set; }
+    private string firstItemEnterClass = "mud-carousel-transition-fade-in3";
+    private string firstItemExitClass = "mud-carousel-transition-slide-prev-rtl-exit";
+
+    private string secondItemEnterClass = "mud-carousel-transition-fade-in3";
+    private string secondItemExitClass = "mud-carousel-transition-slide-prev-rtl-exit";
+
+
+    private static List<ShoppingListCatalog> shoppingListCatalogs = new();
+    private static List<ShoppingListCatalog> shoppingListCatalogsNext = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        loadingData = true;
+        loadingDataNext = true;
+
+        currentYear = currentYearNext = displayYear = GetYearFromParameter();
+        UpdateYearURI();
+
+        var result = await ShoppingListCatalogService.GetShoppingListCatalogsByYearAsync(currentYear);
+
+        if (result.Data is not null)
+        {
+            shoppingListCatalogs = result.Data;
+        }
+
+        loadingData = false;
+        loadingDataNext = false;
+    }
+
+    private int GetYearFromParameter()
+    {
+        var now = DateTime.Now;
+
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("year", out var yearURI))
+        {
+            if (int.TryParse(yearURI, out int yearResult))
+            {
+                return Math.Max(yearResult, 0);
+            }
+        }
+
+        return now.Year;
+    }
+
+    private void UpdateYearURI()
+    {
+        var newUri = UpdateQueryStringYear(NavigationManager.Uri, displayYear);
+        NavigationManager.NavigateTo(newUri, forceLoad: false);
+    }
+
+    private string UpdateQueryStringYear(string currentUri, int newYear)
+    {
+        var uri = new Uri(currentUri);
+        var query = QueryHelpers.ParseQuery(uri.Query);
+
+        Dictionary<string, string> queryDictionary = query
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString());
+
+        queryDictionary["year"] = newYear.ToString();
+
+        var newQueryString = QueryHelpers.AddQueryString("", queryDictionary);
+
+        var newUri = $"{uri.GetLeftPart(UriPartial.Path)}{newQueryString}";
+
+        return newUri;
+    }
+
+    private async Task IncrementYear()
+    {
+
+        if (loadingData || loadingDataNext)
+        {
+            return;
+        }
+
+        if (carousel!.SelectedIndex == 0)
+        {
+            firstItemExitClass = "mud-carousel-transition-slide-prev-rtl-exit";
+            secondItemEnterClass = "mud-carousel-transition-slide-prev-rtl-enter";
+        }
+        else
+        {
+            firstItemEnterClass = "mud-carousel-transition-slide-prev-rtl-enter";
+            secondItemExitClass = "mud-carousel-transition-slide-prev-rtl-exit";
+        }
+
+
+        carousel!.Next();
+
+        if (carousel!.SelectedIndex == 0)
+        {
+            loadingData = true;
+            currentYear = currentYearNext + 1;
+            displayYear = currentYear;
+
+            var result = await ShoppingListCatalogService.GetShoppingListCatalogsByYearAsync(currentYear);
+
+            if (result.Data is not null)
+            {
+                shoppingListCatalogs = result.Data;
+            }
+
+            //shoppingLists =
+            //ShoppingListService.ShoppingLists.Where(x => x.Date.Year == currentYear).ToList();
+
+            loadingData = false;
+        }
+        else
+        {
+            loadingDataNext = true;
+            currentYearNext = currentYear + 1;
+            displayYear = currentYearNext;
+
+            var result = await ShoppingListCatalogService.GetShoppingListCatalogsByYearAsync(currentYearNext);
+
+            if (result.Data is not null)
+            {
+                shoppingListCatalogsNext = result.Data;
+            }
+
+            loadingDataNext = false;
+        }
+        UpdateYearURI();
+
+    }
+
+    private async Task DecrementYear()
+    {
+
+
+        if (loadingData || loadingDataNext || displayYear == 0)
+        {
+            return;
+        }
+
+        if (carousel!.SelectedIndex == 0)
+        {
+            firstItemExitClass = "mud-carousel-transition-slide-prev-exit";
+            secondItemEnterClass = "mud-carousel-transition-slide-prev-enter";
+        }
+        else
+        {
+            firstItemEnterClass = "mud-carousel-transition-slide-prev-enter";
+            secondItemExitClass = "mud-carousel-transition-slide-prev-exit";
+        }
+
+        carousel!.Previous();
+
+
+        if (carousel!.SelectedIndex == 0)
+        {
+            loadingData = true;
+            currentYear = currentYearNext - 1;
+            displayYear = currentYear;
+
+            var result = await ShoppingListCatalogService.GetShoppingListCatalogsByYearAsync(currentYear);
+
+            if (result.Data is not null)
+            {
+                shoppingListCatalogs = result.Data;
+            }
+
+            loadingData = false;
+        }
+        else
+        {
+            loadingDataNext = true;
+            currentYearNext = currentYear - 1;
+            displayYear = currentYearNext;
+
+            var result = await ShoppingListCatalogService.GetShoppingListCatalogsByYearAsync(currentYearNext);
+
+            if (result.Data is not null)
+            {
+                shoppingListCatalogsNext = result.Data;
+            }
+
+            loadingDataNext = false;
+
+        }
+        UpdateYearURI();
+
+    }
+
+    private async Task MonthContainer_Click(int month)
+    {
+        if (loadingData || loadingDataNext)
+        {
+            return;
+        }
+        var catalog = shoppingListCatalogs.Find(x => x.Date.Month == month);
+
+        if (catalog is not null)
+        {
+            NavigationManager.NavigateTo($"/shoppinglists/{catalog.Date.Year}/{catalog.Date.Month}");
+        }
+        else
+        {
+            await OpenShoppingListCatalogAddDialog(month);
+        }
+    }
+
+    private async Task MonthContainerNext_Click(int month)
+    {
+        if (loadingData || loadingDataNext)
+        {
+            return;
+        }
+        var catalog = shoppingListCatalogsNext.Find(x => x.Date.Month == month);
+
+        if (catalog is not null)
+        {
+            NavigationManager.NavigateTo($"/shoppinglists/{catalog.Date.Year}/{catalog.Date.Month}");
+        }
+        else
+        {
+            await OpenShoppingListCatalogNextAddDialog(month);
+        }
+    }
+
+    private async Task OpenShoppingListCatalogAddDialog(int month)
+    {
+        var parameters = new DialogParameters { ["LocalShoppingListCatalogs"] = shoppingListCatalogs!, ["PickedYear"] = displayYear, ["PickedMonth"] = month };
+        var dialog = await DialogService.ShowAsync<AddShoppingListCatalogDialog>("Monatskatalog hinzufügen", parameters);
+        var result = await dialog.Result;
+    }
+
+    private async Task OpenShoppingListCatalogNextAddDialog(int month)
+    {
+        var parameters = new DialogParameters { ["LocalShoppingListCatalogs"] = shoppingListCatalogsNext!, ["PickedYear"] = displayYear, ["PickedMonth"] = month };
+        var dialog = await DialogService.ShowAsync<AddShoppingListCatalogDialog>("Monatskatalog hinzufügen", parameters);
+        var result = await dialog.Result;
+    }
+
+
+    private string IntToMonthString(int i)
+    {
+        return new DateTime(1970, i, 01).ToString("MMMM");
+    }
+
+
+}

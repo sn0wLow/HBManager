@@ -1,0 +1,147 @@
+﻿@inject IDialogService DialogService
+@inject IConsumerService ConsumerService
+@inject ISnackbar Snackbar
+@namespace HBManager.Client
+@using MudBlazor.Utilities;
+
+<div>
+    <MudDialog>
+        <TitleContent>
+            <MudText Typo="Typo.h6" Class="me-5">
+                <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-3 mb-n1" />
+                Verbraucher bearbeiten
+            </MudText>
+        </TitleContent>
+        <DialogContent>
+            <EditForm Model="@consumerDTO" OnValidSubmit="OnValidSubmit">
+                <DataAnnotationsValidator />
+                <MudTextField T="string" @bind-Value="@consumerDTO.Name"
+                              For="@(() => consumerDTO.Name)" Label="Name des Verbrauchers"
+                              Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Title" AdornmentColor="Color.Default"
+                              Class="mb-5" Variant="Variant.Filled" />
+
+                @if (!isColorValid)
+                {
+                    <div class="d-flex justify-content-between mb-1">
+                        <MudText Color="Color.Error">Valide Farbe des Verbrauchers auswählen</MudText>
+                        <MudIcon Icon="@Icons.Material.Filled.Palette" AdornmentColor="Color.Default" />
+                    </div>
+                    <MudDivider />
+                }
+                else
+                {
+                    <div class="d-flex justify-content-between mb-1">
+                        <MudText>Farbe des Verbrauchers</MudText>
+                        <MudIcon Icon="@Icons.Material.Filled.Palette" AdornmentColor="Color.Default" />
+                    </div>
+                    <MudDivider />
+                }
+
+                <MudColorPicker @ref="@colorPicker" PickerVariant="PickerVariant.Static" ColorPickerView="ColorPickerView.Palette"
+                                Palette="customPalette" Class="palette-picker" ValueChanged="@(m => SelectedColorChanged(m))" />
+
+                <div class="px-1 py-2 d-flex justify-content-end">
+                    <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit">Verbraucher bearbeiten</MudButton>
+                    <MudButton OnClick="Close" Class="ms-1">Schließen</MudButton>
+                </div>
+            </EditForm>
+        </DialogContent>
+    </MudDialog>
+</div>
+@code {
+    [CascadingParameter]
+    public required MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public required Consumer ConsumerToEdit { get; set; }
+
+    private ConsumerEditDTO consumerDTO = new ConsumerEditDTO();
+    private bool processing = false;
+
+    private MudColorPicker? colorPicker;
+    private MudColor? pickedColor = null;
+    private int pickedColorIndex = -1;
+    private bool isColorValid = true;
+
+    private List<MudColor> customPalette = ConsumerColor.Palette.Select(x => new MudColor(x)).ToList();
+
+
+
+    protected override void OnInitialized()
+    {
+        consumerDTO.ID = ConsumerToEdit.ID;
+        consumerDTO.Name = ConsumerToEdit.Name;
+        consumerDTO.ColorIndex = ConsumerToEdit.ColorIndex;
+    }
+
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+
+
+            try
+            {
+                pickedColor = customPalette.ElementAt(consumerDTO.ColorIndex);
+                pickedColorIndex = consumerDTO.ColorIndex;
+                colorPicker!.Value = pickedColor;
+
+
+
+            }
+            catch (Exception)
+            {
+                pickedColor = null;
+                pickedColorIndex = -1;
+            }
+
+        }
+    }
+
+    private void SelectedColorChanged(MudColor selectedColor)
+    {
+        pickedColor = selectedColor;
+
+        pickedColorIndex = ConsumerColor.Palette.FindIndex(0, x => x.Equals(pickedColor.Value, StringComparison.InvariantCultureIgnoreCase));
+        isColorValid = pickedColorIndex == -1 ? false : true;
+
+    }
+
+    private void Close() => MudDialog?.Cancel();
+    private async Task OnValidSubmit(EditContext context)
+    {
+        if (processing)
+        {
+            return;
+        }
+
+        if (pickedColorIndex == -1)
+        {
+            isColorValid = false;
+            return;
+        }
+
+        processing = true;
+
+        consumerDTO.ColorIndex = pickedColorIndex;
+        var result = await ConsumerService.EditConsumerAsync(consumerDTO);
+
+        if (!result.Success)
+        {
+            Snackbar.Add($"{result.Message}", Severity.Error);
+            processing = false;
+            return;
+        }
+
+        var editedShoppingListCatalog = result.Data!;
+
+        ConsumerToEdit.ID = editedShoppingListCatalog.ID;
+        ConsumerToEdit.Name = editedShoppingListCatalog.Name;
+        ConsumerToEdit.ColorIndex = editedShoppingListCatalog.ColorIndex;
+
+        Snackbar.Add("Verbraucher bearbeitet", Severity.Info);
+        MudDialog!.Close(DialogResult.Ok(true));
+        processing = false;
+    }
+}
