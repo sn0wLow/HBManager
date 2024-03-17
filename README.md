@@ -9,7 +9,7 @@ Haushaltsbuchmanager/Shopping List Manager in Blazor WASM
 - Add Products to each Shopping list
 
 - Easily Track how much money each Consumer spent using different diagramms
-- Filter Consumer spendings via product name, product type or store
+- Filter Consumer spendings via product name, product type or retailer
 
 ===================================================================
 
