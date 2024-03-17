@@ -1,6 +1,6 @@
 # HBManager
 
-Haushaltsbuchmanager in Blazor WASM
+Haushaltsbuchmanager/Shopping List Manager in Blazor WASM
 
 - Login/Register to the Website
 - Add and remove Consumers
