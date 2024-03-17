@@ -20,4 +20,4 @@ Haushaltsbuchmanager/Shopping List Manager in Blazor WASM
 - Parts of the UI are implemented using (customized) MudBlazor components
 - Initial Blazor Project from 2021
 
-[Some UI impressions (imgur)]([https://www.google.com](https://imgur.com/a/apL9Zwq)https://imgur.com/a/apL9Zwq])
+[Some UI impressions (imgur)](https://imgur.com/a/apL9Zwq)
