@@ -18,3 +18,6 @@ Haushaltsbuchmanager/Shopping List Manager in Blazor WASM
 - Databse Connection via SQL Express
 - Data modeling using code first Entity Framework Migrations
 - Parts of the UI are implemented using (customized) MudBlazor components
+- Initial Blazor Project from 2021
+
+[Some UI impressions (imgur)]([https://www.google.com](https://imgur.com/a/apL9Zwq)https://imgur.com/a/apL9Zwq])
