@@ -11,7 +11,7 @@ Haushaltsbuchmanager/Shopping List Manager in Blazor WASM
 - Easily Track how much money each Consumer spent using different diagramms
 - Filter Consumer spendings via product name, product type or retailer
 
-===================================================================
+---
 
 - Implemented using Blazor WebAssembly
 - Custom authentication using JSON Web Tokens
