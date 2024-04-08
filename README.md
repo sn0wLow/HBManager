@@ -15,7 +15,7 @@ Haushaltsbuchmanager/Shopping List Manager in Blazor WASM
 
 - Implemented using Blazor WebAssembly
 - Custom authentication using JSON Web Tokens
-- Databse Connection via SQL Express
+- Database Connection via SQL Express
 - Data modeling using code first Entity Framework Migrations
 - Sensitive Information is stored by using BCrypt.Net hashing
 - Parts of the UI are implemented using (customized) MudBlazor components
